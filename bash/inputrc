@@ -1,0 +1,22 @@
+# Readline settings. install.sh links this to ~/.inputrc.
+$include /etc/inputrc
+
+set editing-mode vi
+set show-mode-in-prompt on
+
+# Change cursor in different modes
+set vi-ins-mode-string "\1\e[6 q\2"   # Beam cursor in insert mode
+set vi-cmd-mode-string "\1\e[2 q\2"   # Block cursor in normal mode
+
+# ── fish-like quality of life ────────────────────────────────────────────────
+# Prefix history search: type part of a command, Up/Down filters matching history
+"\e[A": history-search-backward
+"\e[B": history-search-forward
+
+# Completion niceties
+set completion-ignore-case on          # case-insensitive tab completion
+set show-all-if-ambiguous on           # single Tab shows all matches
+set colored-stats on                   # colorize completion by file type
+set colored-completion-prefix on
+set menu-complete-display-prefix on
+set mark-symlinked-directories on

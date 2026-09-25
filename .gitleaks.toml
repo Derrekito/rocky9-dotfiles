@@ -1,0 +1,14 @@
+# gitleaks' default rules, plus checks for things that aren't secrets but
+# shouldn't be published from a dotfiles repo.
+[extend]
+useDefault = true
+
+[[rules]]
+id = "absolute-home-path"
+description = "Absolute path into a home directory (use ~ or $HOME)"
+regex = '''/home/[a-z_][a-z0-9_-]*/'''
+
+[[rules]]
+id = "private-email"
+description = "Personal email address (commit with the GitHub noreply address)"
+regex = '''[A-Za-z0-9._%+-]+@(gmail|yahoo|outlook|hotmail|icloud|proton)\.(com|me)'''

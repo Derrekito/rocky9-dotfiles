@@ -1,0 +1,42 @@
+# Pinned plugins for Neovim 0.8 (Rocky Linux 9 / EPEL). Installed by install-plugins.sh.
+# name  repo  commit  start|opt  # commit date, why this pin
+plenary.nvim               nvim-lua/plenary.nvim                      74b06c6c75e4eeb3108ec01852001636d85a932b  start  # 2026-04-10, your lazy-lock commit
+telescope.nvim             nvim-telescope/telescope.nvim              a0bbec21143c7bc5f8bb02e0005fa0b982edc026  start  # 2024-05-24, tag 0.1.8 (last release supporting 0.8)
+telescope-fzf-native.nvim  nvim-telescope/telescope-fzf-native.nvim   b25b749b9db64d375d782094e2b9dce53ad53a40  start  # 2026-05-06, your lazy-lock commit; needs make
+nvim-lspconfig             neovim/nvim-lspconfig                      056f569f71e4b726323b799b9cfacc53653bceb3  start  # 2024-09-10, tag v1.0.0 (last release supporting 0.8)
+mason.nvim                 williamboman/mason.nvim                    fc98833b6da5de5a9c5b1446ac541577059555be  start  # 2025-02-15, tag v1.11.0 (v2 needs 0.10)
+mason-lspconfig.nvim       williamboman/mason-lspconfig.nvim          25c11854aa25558ee6c03432edfa0df0217324be  start  # 2024-09-08, tag v1.31.0 (v1.32+ needs 0.9)
+neodev.nvim                folke/neodev.nvim                          6a533ed9d3435dcaa456380d833ea04da37ea2ed  start  # 2024-03-22, commit before neodev started deep-copying replies (0.8 deepcopy fails on vim.NIL)
+nvim-cmp                   hrsh7th/nvim-cmp                           2ffe79f1f021def8dd1fcd81deb16f1bb0d989f3  start  # 2026-07-10, your lazy-lock commit
+cmp-nvim-lsp               hrsh7th/cmp-nvim-lsp                       a8912b88ce488f411177fc8aed358b04dc246d7b  start  # 2025-04-01, last commit before 0.11-only client:method() calls
+cmp-buffer                 hrsh7th/cmp-buffer                         b74fab3656eea9de20a9b8116afa3cfc4ec09657  start  # 2025-04-01, your lazy-lock commit
+cmp-path                   hrsh7th/cmp-path                           c642487086dbd9a93160e1679a1327be111cbc25  start  # 2025-07-30, your lazy-lock commit
+cmp-cmdline                hrsh7th/cmp-cmdline                        d126061b624e0af6c3a556428712dd4d4194ec6d  start  # 2025-05-18, your lazy-lock commit
+LuaSnip                    L3MON4D3/LuaSnip                           642b0c595e11608b4c18219e93b88d7637af27bc  start  # 2026-03-21, tag v2.5.0 (later commits need 0.9)
+cmp_luasnip                saadparwaiz1/cmp_luasnip                   98d9cb5c2c38532bd9bdb481067b20fea8f32e90  start  # 2024-11-04, your lazy-lock commit
+friendly-snippets          rafamadriz/friendly-snippets               6cd7280adead7f586db6fccbd15d2cac7e2188b9  start  # 2026-01-23, your lazy-lock commit
+nvim-treesitter            nvim-treesitter/nvim-treesitter            b401b7423d18c78371c5ff1a5f8d3c14292b2047  start  # 2023-02-24, tag v0.8.5.2 (last release supporting 0.8)
+nvim-autopairs             windwp/nvim-autopairs                      b0b79e42a28f09719a7da9534c3731fa37319d9b  start  # 2024-05-16, last commit before 0.9-only treesitter calls
+conform.nvim               stevearc/conform.nvim                      cd75be867f2331b22905f47d28c0c270a69466aa  start  # 2024-07-01, upstream nvim-0.8 branch
+aerial.nvim                stevearc/aerial.nvim                       d8343d0c935a72382413f9344ae0e39072405b7d  start  # 2024-07-15, upstream nvim-0.8 branch
+nvim-tree.lua              nvim-tree/nvim-tree.lua                    2bc725a3ebc23f0172fb0ab4d1134b81bcc13812  start  # 2024-05-14, upstream compat-nvim-0.8 tag (v1.3.3)
+nvim-web-devicons          nvim-tree/nvim-web-devicons                0ca28b61a04fe7426cefbdd52c2647ef0e335b5f  start  # 2026-07-14, your lazy-lock commit
+trouble.nvim               folke/trouble.nvim                         f1168feada93c0154ede4d1fe9183bf69bac54ea  start  # 2023-10-18, tag v2.10.0 (v3 needs 0.9.2)
+nvim-lint                  mfussenegger/nvim-lint                     27f44d1cc3d733a38a736acb902f94879d99c76c  start  # 2024-10-03, last commit before 0.9.5 requirement
+nvim-dap                   mfussenegger/nvim-dap                      5ba8ceace596360321cf33fa4b56d9d46e057ce9  start  # 2024-05-30, last commit supporting 0.8
+nvim-dap-ui                rcarriga/nvim-dap-ui                       0b4816e5ad5f3219e8e3ec9cce07f61b770c1974  start  # 2024-01-20, tag v3.9.3 (v4 needs nvim-nio)
+neotest                    nvim-neotest/neotest                       e8ed1ac5562bf1a9002fc1d49ae6b0a6a83d1d4d  start  # 2023-10-20, tag v3.4.7 (v4 uses 0.9-only treesitter API)
+neotest-python             nvim-neotest/neotest-python                81d2265efac717bb567bc15cc652ae10801286b3  start  # 2023-08-25, matches neotest v3.4.7
+FixCursorHold.nvim         antoinemadec/FixCursorHold.nvim            1900f89dc17c603eec29960f57c00bd9ae696495  start  # 2023-02-13, your lazy-lock commit
+harpoon                    ThePrimeagen/harpoon                       87b1a3506211538f460786c23f98ec63ad9af4e5  start  # 2025-10-31, your lazy-lock commit (harpoon2)
+obsidian.nvim              epwalsh/obsidian.nvim                      ae1f76a75c7ce36866e1d9342a8f6f5b9c2caf9b  start  # 2024-07-11, tag v3.9.0 (your lazy-lock commit)
+vimtex                     lervag/vimtex                              9f6a5bb0a9c9f1542fe88dc07511ce8401242e2a  start  # 2024-04-21, tag v2.15 (v2.16+ needs 0.9.5)
+vim-table-mode             dhruvasagar/vim-table-mode                 bb025308a45c67c7c8f0763ba37bc2ee3f534df0  opt    # 2025-11-22, your lazy-lock commit; loaded on first markdown buffer
+vim-fugitive               tpope/vim-fugitive                         3b753cf8c6a4dcde6edee8827d464ba9b8c4a6f0  start  # 2026-03-07, your lazy-lock commit
+cloak.nvim                 laytan/cloak.nvim                          648aca6d33ec011dc3166e7af3b38820d01a71e4  start  # 2024-06-12, your lazy-lock commit
+rose-pine                  rose-pine/neovim                           ff483051a47e27d84bdef47703538df1ed9f4a47  start  # 2026-05-15, your lazy-lock commit
+zen-mode.nvim              folke/zen-mode.nvim                        8564ce6d29ec7554eb9df578efa882d33b3c23a7  start  # 2025-10-28, your lazy-lock commit
+vim-be-good                ThePrimeagen/vim-be-good                   0ae3de14eb8efc6effe7704b5e46495e91931cc5  start  # 2024-12-04, your lazy-lock commit
+nvim-type-anim             Derrekito/nvim-type-anim                   a83cc5fcbe092fa606dd0cc611fc0d5c6872cfb6  start  # 2024-01-14, your lazy-lock commit
+devdocs.nvim               Derrekito/devdocs.nvim                     7982f120b54f9c87a00b3c5ae8a2511cef88e5c8  start  # 2026-09-09, current main
+diagnostic-picker.nvim     Derrekito/diagnostic-picker.nvim           922a034e38a9d7707aedd3512749c2f4450866d6  start  # 2026-06-19, current main

@@ -1,0 +1,71 @@
+# Shared git settings. install.sh adds this file to ~/.gitconfig with
+#   git config --global --add include.path <this file>
+# so identity, credentials, and proxy settings stay in ~/.gitconfig, per
+# machine, and never land in this repo.
+
+[core]
+  editor = nvim
+  preloadIndex = true
+  untrackedCache = true
+
+[init]
+  defaultBranch = master
+
+[pull]
+  rebase = true
+
+[push]
+  autoSetupRemote = true
+
+[fetch]
+  prune = true
+  parallel = 0
+
+[branch]
+  sort = -committerdate
+  autosetuprebase = always
+
+[tag]
+  sort = -version:refname
+
+[status]
+  showUntrackedFiles = all
+  submodulesummary = true
+
+[diff]
+  algorithm = histogram
+  colorMoved = default
+  mnemonicPrefix = true
+
+[merge]
+  conflictstyle = diff3
+
+[commit]
+  verbose = true
+
+[rerere]
+  enabled = true
+  autoupdate = true
+
+[column]
+  ui = auto
+
+[maintenance]
+  auto = true
+  strategy = incremental
+
+[alias]
+  co = checkout
+  br = branch
+  ci = commit
+  st = status
+  s = status -sb
+  wta = worktree add
+  wtl = worktree list
+  wtr = worktree remove
+  lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'
+  amend = commit --amend --no-edit
+  unstage = reset HEAD --
+  last = log -1 HEAD
+  contributors = shortlog -s -n
+  aliases = config --get-regexp alias

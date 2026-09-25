@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Attach to tmux without piling up sessions.
+#   Over SSH: attach to the first session, creating one if none exist.
+#   Locally:  attach to the first unattached session, else start a new one.
+set -u
+
+default_session="$(hostname -s)"
+
+if ! tmux has-session 2>/dev/null; then
+  exec tmux new-session -s "$default_session"
+fi
+
+if [ -n "${SSH_CONNECTION:-}" ]; then
+  session=$(tmux list-sessions -F '#{session_name}' 2>/dev/null | head -n1)
+else
+  session=$(tmux list-sessions -F '#{session_name} #{session_attached}' 2>/dev/null |
+    awk '$2 == "0" { print $1; exit }')
+fi
+
+if [ -n "$session" ]; then
+  exec tmux attach-session -t "$session"
+fi
+exec tmux new-session

@@ -1,0 +1,42 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # scan every commit, not just the tip
+      - name: gitleaks
+        run: |
+          docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:latest \
+            git /repo --config /repo/.gitleaks.toml --redact --verbose
+
+  rocky9:
+    runs-on: ubuntu-latest
+    container: rockylinux/rockylinux:9
+    steps:
+      - name: Base tools
+        run: dnf install -y git sudo
+      - uses: actions/checkout@v4
+      - name: Packages
+        run: ./provision/packages.sh
+      - name: Create a user
+        run: |
+          useradd -m dev
+          cp -a "$GITHUB_WORKSPACE" ~dev/rocky9-dotfiles
+          chown -R dev:dev ~dev/rocky9-dotfiles
+      - name: Install
+        run: sudo -iu dev ~dev/rocky9-dotfiles/install.sh
+      - name: Re-run install (idempotent)
+        run: sudo -iu dev ~dev/rocky9-dotfiles/install.sh
+      - name: Smoke test
+        run: sudo -iu dev ~dev/rocky9-dotfiles/test/smoke.sh

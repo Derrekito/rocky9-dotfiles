@@ -1,0 +1,10 @@
+# tmux plugins, cloned at these commits into plugins/ by ../install.sh.
+# No TPM: tmux.conf loads each one with run-shell, in order.
+# name                  repo                             commit
+tmux-sensible           tmux-plugins/tmux-sensible       25cb91f42d020f675bb0a2ce3fbd3a5d96119efa
+tmux-resurrect          tmux-plugins/tmux-resurrect      cff343cf9e81983d3da0c8562b01616f12e8d548
+tmux-continuum          tmux-plugins/tmux-continuum      0698e8f4b17d6454c71bf5212895ec055c578da0
+tmux-yank               tmux-plugins/tmux-yank           acfd36e4fcba99f8310a7dfb432111c242fe7392
+vim-tmux-navigator      christoomey/vim-tmux-navigator   e41c431a0c7b7388ae7ba341f01a0d217eb3a432
+tmux                    rose-pine/tmux                   6222fc73a9ce0bf36ffd3a8ca7d2f3e516f5c9ef
+tmux-pain-control       tmux-plugins/tmux-pain-control   32b760f6652f2305dfef0acd444afc311cf5c077

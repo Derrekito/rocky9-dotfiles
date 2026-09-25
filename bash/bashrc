@@ -1,0 +1,128 @@
+# Sourced from ~/.bashrc by a line install.sh adds, so the distro and corp
+# ~/.bashrc stays in charge of everything else. Rocky's default ~/.bashrc
+# already sources /etc/bashrc and ~/.bashrc.d/*.
+#
+# Machine-specific settings (work-only aliases, proxies, anything you'd never
+# publish) go in ~/.config/rocky9-dotfiles/local.sh, sourced at the end.
+
+DOTFILES_DIR="$(dirname "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")")"
+
+export VISUAL='nvim'
+export EDITOR='nvim'
+
+_add_path() {
+  [ -d "$1" ] || return 0
+  case ":$PATH:" in *":$1:"*) ;; *) PATH="$1:$PATH" ;; esac
+}
+_add_path "$HOME/go/bin"
+_add_path "$HOME/.cargo/bin"
+_add_path "$HOME/.local/bin"
+_add_path "$DOTFILES_DIR/bin"
+unset -f _add_path
+export PATH
+
+# Everything below is for interactive shells only.
+[[ $- != *i* ]] && return
+
+shopt -s autocd
+set -o vi
+
+HISTFILE="$HOME/.bash_history.$(hostname -s)"
+HISTSIZE=100000
+HISTFILESIZE=200000
+
+# ── Aliases ─────────────────────────────────────────────────────────────────
+alias grep='grep --color=auto'
+alias :q='exit'
+alias ka='killall'
+alias v='nvim'
+alias vi='nvim'
+alias vim='nvim'
+alias mkdir='mkdir -pv'
+
+tree() {
+  command tree -a --dirsfirst \
+    -I '__pycache__|venv|.venv|node_modules|dist|build|*.egg-info|.git|.pytest_cache' \
+    "$@"
+}
+
+# ── tmux ────────────────────────────────────────────────────────────────────
+# Outside tmux, bare `tmux` attaches to an existing session (see
+# bin/tmux-attach) instead of starting yet another one.
+tmux() {
+  if [ -n "$TMUX" ] || [ $# -gt 0 ]; then
+    command tmux "$@"
+  else
+    tmux-attach
+  fi
+}
+
+# Attach to a tmux session picked with fzf.
+ta() {
+  command tmux has-session 2>/dev/null || {
+    echo "No tmux sessions"
+    return 1
+  }
+  local session
+  session=$(command tmux list-sessions -F '#{session_name}' |
+    fzf --reverse --header="Attach to session") || return
+  [ -n "$session" ] && command tmux attach -t "$session"
+}
+
+# ── fzf ─────────────────────────────────────────────────────────────────────
+# Key bindings (Ctrl-T, Ctrl-R, Alt-C) and ** completion, from the fzf package.
+[ -r /usr/share/fzf/shell/key-bindings.bash ] && source /usr/share/fzf/shell/key-bindings.bash
+[ -r /usr/share/bash-completion/completions/fzf ] && source /usr/share/bash-completion/completions/fzf
+export FZF_DEFAULT_COMMAND='rg --files --hidden --glob "!.git"'
+export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+export FZF_DEFAULT_OPTS='--color=bg+:#44415a,fg+:#e0def4,hl:#c4a7e7,hl+:#c4a7e7,header:#9ccfd8,pointer:#eb6f92'
+
+cdd() {
+  local dir
+  dir=$(find . -type d 2>/dev/null | fzf) || return
+  [ -n "$dir" ] && cd "$dir"
+}
+
+cdf() {
+  local file
+  file=$(fzf) || return
+  [ -n "$file" ] && cd "$(dirname "$file")"
+}
+
+# ── Python venvs under ~/venvs ──────────────────────────────────────────────
+lsvenv() {
+  if [ -d "$HOME/venvs" ]; then ls -1 "$HOME/venvs"; else echo "No ~/venvs directory found."; fi
+}
+
+mkvenv() {
+  local envname="$1" envdir="$HOME/venvs/$1"
+  [ -z "$envname" ] && {
+    echo "Usage: mkvenv <envname>"
+    return 1
+  }
+  [ -e "$envdir" ] && {
+    echo "Venv already exists: $envname"
+    return 1
+  }
+  python3 -m venv "$envdir" && echo "Created venv: $envname"
+  source "$envdir/bin/activate"
+}
+
+venv-activate() {
+  local envpath="$HOME/venvs/$1/bin/activate"
+  if [ -f "$envpath" ]; then
+    source "$envpath"
+    echo "Activated venv: $envpath"
+  else echo "No such venv: $1"; fi
+}
+
+# ── Local overrides ─────────────────────────────────────────────────────────
+DOTFILES_TMUX_ON_SSH=1   # set to 0 in local.sh to stop auto-attaching over SSH
+[ -r "$HOME/.config/rocky9-dotfiles/local.sh" ] && source "$HOME/.config/rocky9-dotfiles/local.sh"
+
+# SSH logins land in tmux. Skipped for non-terminal sessions and for editors
+# that open a shell over SSH (VS Code Remote sets TERM_PROGRAM=vscode).
+if [ "$DOTFILES_TMUX_ON_SSH" = 1 ] && [ -n "$SSH_CONNECTION" ] && [ -z "$TMUX" ] &&
+  [ -t 0 ] && [ "${TERM_PROGRAM:-}" != vscode ] && command -v tmux >/dev/null; then
+  exec tmux-attach
+fi

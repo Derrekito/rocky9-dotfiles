@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Refuse commits that look like they leak something. Enable with:
+#   git config core.hooksPath hooks
+set -uo pipefail
+root="$(git rev-parse --show-toplevel)"
+status=0
+
+# 1. Commit identity: only the GitHub noreply address.
+email="$(git config user.email || true)"
+case "$email" in
+  *@users.noreply.github.com) ;;
+  *) echo "pre-commit: user.email is '$email'; use your GitHub noreply address:" >&2
+     echo "  git config user.email <id>+<name>@users.noreply.github.com" >&2
+     status=1 ;;
+esac
+
+# 2. gitleaks on what's staged, when it's installed (CI always runs it).
+if command -v gitleaks >/dev/null; then
+  gitleaks git --staged --config "$root/.gitleaks.toml" --redact --no-banner "$root" || status=1
+else
+  # Fallback so the hook still catches the obvious without gitleaks.
+  if git diff --cached -U0 | grep -E '^\+' | grep -Eiq \
+    -e '/home/[a-z_][a-z0-9_-]*/' \
+    -e '-----BEGIN [A-Z ]*PRIVATE KEY-----' \
+    -e '(api[_-]?key|token|secret|passw(or)?d)[[:space:]]*[:=][[:space:]]*[^[:space:]]{8,}' \
+    -e 'gh[pousr]_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}'; then
+    echo "pre-commit: staged changes look like they contain a secret or home path:" >&2
+    git diff --cached -U0 | grep -nE '^\+' | grep -Ei \
+      -e '/home/[a-z_]' -e 'PRIVATE KEY' -e '(api[_-]?key|token|secret|passw)' \
+      -e 'gh[pousr]_|AKIA' >&2
+    status=1
+  fi
+  echo "pre-commit: gitleaks not installed; ran the basic check only." >&2
+fi
+
+exit $status

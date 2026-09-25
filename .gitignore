@@ -1,0 +1,5 @@
+# Plugins are cloned at install time from the pins in */plugins.lock.
+/tmux/plugins/
+.vagrant/
+*.bak
+*.bak.*
