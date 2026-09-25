@@ -39,11 +39,12 @@ if [ -x "$gopls" ]; then
   out=$(cd "$tmp" && nvim --headless main.go -c 'lua
     vim.wait(20000, function() return #vim.lsp.get_active_clients({ name = "gopls" }) > 0 end, 200)
     local ok = #vim.lsp.get_active_clients({ name = "gopls" }) > 0
-    io.stdout:write(ok and "gopls attached\n" or "gopls did not attach\n")
+    io.stdout:write(ok and "\ngopls attached\n" or "\ngopls did not attach\n")
     vim.cmd(ok and "qa!" or "cq")' 2>&1)
-  echo "$out" | grep -v '^Diagnostic filter' | tail -3
+  grep -o 'gopls [a-z ]*' <<<"$out"
   grep -q 'gopls attached' <<<"$out" || fail "gopls"
   rm -rf "$tmp"
+  [ -x "${gopls%/*}/goimports" ] || fail "goimports not built"
 else
   echo "gopls not built yet (Mason builds it on first launch)"
 fi
