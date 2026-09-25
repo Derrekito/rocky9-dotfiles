@@ -20,6 +20,7 @@ dnf install -y \
   python3 python3-pip \
   python-unversioned-command python3-beautifulsoup4 python3-lxml \
   cppcheck clang-tools-extra \
+  go-toolset delve \
   bash-completion hostname psmisc procps-ng findutils which
 
 # python-unversioned-command provides `python`, which devdocs.nvim calls; bs4

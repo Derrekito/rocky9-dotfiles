@@ -22,6 +22,32 @@ for mod in telescope cmp lspconfig mason nvim-treesitter conform lint aerial tro
     fail "nvim: require('$mod')"
 done
 
+echo "--- go"
+go version || fail "go"
+dlv version 2>/dev/null | head -1 || fail "dlv"
+ts="${XDG_DATA_HOME:-$HOME/.local/share}/nvim/site/pack/plugins/start/nvim-treesitter/parser"
+for p in go gomod gosum gowork; do
+  [ -f "$ts/$p.so" ] || fail "treesitter parser: $p"
+done
+# gopls attaches to a Go file. Only when Mason has built it (CI does that in
+# a step before this; on a new machine it happens on first launch).
+gopls="${XDG_DATA_HOME:-$HOME/.local/share}/nvim/mason/bin/gopls"
+if [ -x "$gopls" ]; then
+  tmp=$(mktemp -d)
+  printf 'module example.com/smoke\n\ngo 1.21\n' >"$tmp/go.mod"
+  printf 'package main\n\nimport "fmt"\n\nfunc main() { fmt.Println("hi") }\n' >"$tmp/main.go"
+  out=$(cd "$tmp" && nvim --headless main.go -c 'lua
+    vim.wait(20000, function() return #vim.lsp.get_active_clients({ name = "gopls" }) > 0 end, 200)
+    local ok = #vim.lsp.get_active_clients({ name = "gopls" }) > 0
+    io.stdout:write(ok and "gopls attached\n" or "gopls did not attach\n")
+    vim.cmd(ok and "qa!" or "cq")' 2>&1)
+  echo "$out" | grep -v '^Diagnostic filter' | tail -3
+  grep -q 'gopls attached' <<<"$out" || fail "gopls"
+  rm -rf "$tmp"
+else
+  echo "gopls not built yet (Mason builds it on first launch)"
+fi
+
 echo "--- devdocs.nvim"
 # :DevdocsUpdate shells out to `python scripts/convert.py`; convert a tiny
 # page with the system python to prove that path works (Rocky's 3.9 + bs4).

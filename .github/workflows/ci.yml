@@ -38,5 +38,9 @@ jobs:
         run: sudo -iu dev ~dev/rocky9-dotfiles/install.sh
       - name: Re-run install (idempotent)
         run: sudo -iu dev ~dev/rocky9-dotfiles/install.sh
+      - name: Build Go tools with Mason (Rocky's Go)
+        # Normally installed in the background on first launch; done here so
+        # the smoke test can check gopls attaches on Neovim 0.8.
+        run: sudo -iu dev nvim --headless -c 'MasonInstall gopls goimports' -c 'qa'
       - name: Smoke test
         run: sudo -iu dev ~dev/rocky9-dotfiles/test/smoke.sh

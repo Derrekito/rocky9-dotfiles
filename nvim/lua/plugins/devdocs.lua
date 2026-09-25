@@ -6,4 +6,9 @@ require("devdocs").setup({
   viewer = "markdown", -- rendered markdown pages (alternative: "man")
   split = "right",     -- docs open to the right; code frame stays pinned at `width`
   pin = true,          -- hold the code frame at `width` cols; docs get the rest
+  -- Added to the plugin's defaults (cpp, c, lua, bash, cmake, python).
+  -- :DevdocsUpdate go fetches it.
+  docsets = { go = { slug = "go", lang = "go" } },
+  filetypes = { go = "go" },
+  keyword_chars = { go = "." }, -- gK on fmt.Println looks up the whole name
 })

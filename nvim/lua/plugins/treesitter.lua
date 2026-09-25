@@ -6,7 +6,8 @@ require("nvim-treesitter.configs").setup({
   ensure_installed = {
     "javascript", "typescript", "c", "cpp", "lua", "rust",
     "vim", "help", "query", "latex", "markdown", -- "help" is vimdoc's pre-0.9 name
-    "markdown_inline", "make", "cuda"
+    "markdown_inline", "make", "cuda",
+    "go", "gomod", "gosum", "gowork"
   },
   -- Headless (install.sh, CI): compile parsers before exiting, so they exist
   -- before the first real launch. Interactive: compile in the background.

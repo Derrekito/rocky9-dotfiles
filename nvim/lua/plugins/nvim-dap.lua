@@ -50,6 +50,21 @@ dap.configurations.cpp = {
 dap.configurations.c = dap.configurations.cpp
 dap.configurations.cuda = dap.configurations.cpp -- CUDA uses same debugger (gdb/lldb via cpptools)
 
+-- Go setup (delve from AppStream; `dlv dap` speaks DAP natively)
+dap.adapters.delve = {
+  type = "server",
+  port = "${port}",
+  executable = {
+    command = "dlv",
+    args = { "dap", "-l", "127.0.0.1:${port}" },
+  },
+}
+dap.configurations.go = {
+  { type = "delve", name = "Debug file", request = "launch", program = "${file}" },
+  { type = "delve", name = "Debug package", request = "launch", program = "${fileDirname}" },
+  { type = "delve", name = "Debug test (package)", request = "launch", mode = "test", program = "${fileDirname}" },
+}
+
 -- Keymaps
 vim.keymap.set("n", "<leader>db", dap.toggle_breakpoint, { noremap = true, silent = true })
 vim.keymap.set("n", "<leader>dc", dap.continue, { noremap = true, silent = true })

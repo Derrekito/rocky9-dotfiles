@@ -25,7 +25,7 @@ require("mason").setup({
 -- mason-lspconfig v1: installs the servers on first launch. (v2's
 -- automatic_enable needs 0.11; the setup loop below starts them instead.)
 require("mason-lspconfig").setup({
-  ensure_installed = { 'clangd', 'rust_analyzer', 'bashls', 'lua_ls', 'marksman', 'pylsp', 'jsonls', 'texlab' },
+  ensure_installed = { 'clangd', 'rust_analyzer', 'gopls', 'bashls', 'lua_ls', 'marksman', 'pylsp', 'jsonls', 'texlab' },
 })
 
 -- Non-LSP tooling (linters, formatters) that conform.nvim and nvim-lint shell
@@ -44,6 +44,7 @@ local tools = {
   "taplo",         -- toml
   "latexindent",   -- tex
   "bibtex-tidy",   -- bib
+  "goimports",     -- go (built with `go install`, so needs the Go toolchain)
 
   -- Linters (nvim-lint)
   "shellcheck",    -- sh, bash
@@ -57,7 +58,8 @@ local tools = {
   -- Not available from Mason, installed out of band:
   --   cppcheck         -> dnf (EPEL), c/cpp linting
   --   clang-format     -> dnf (clang-tools-extra)
-  --   gofmt, rustfmt   -> ship with the Go / Rust toolchains
+  --   gofmt            -> ships with Go (dnf go-toolset)
+  --   rustfmt          -> ships with the Rust toolchain
 }
 -- Skipped headless (install.sh, CI), which exits before an install finishes.
 if #vim.api.nvim_list_uis() > 0 then
@@ -154,6 +156,18 @@ local servers = {
             maxLineLength = 140, -- Set maximum line length
           },
         },
+      },
+    },
+  },
+
+  -- gopls: Mason builds it with `go install`, so it needs the Go toolchain
+  -- (go-toolset from AppStream). staticcheck adds the extra analyzers a
+  -- separate golangci-lint run would otherwise cover.
+  gopls = {
+    settings = {
+      gopls = {
+        staticcheck = true,
+        analyses = { unusedparams = true, shadow = true },
       },
     },
   },
