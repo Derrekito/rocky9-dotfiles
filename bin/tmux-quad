@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# Open a 2x2 grid of panes in a new window next to the current one, each with
+# its own prompt palette (PROMPT_THEME, see bash/prompt.bash), background tint,
+# and a labeled border, so the panes are easy to tell apart in a demo.
+#
+# Usage: tmux-quad [window-name]
+
+set -euo pipefail
+
+# label (= PROMPT_THEME) | pane background | border label color
+# Order is top-left, top-right, bottom-left, bottom-right.
+PANES=(
+  "moon|#232136|#c4a7e7"
+  "mocha|#1e1e2e|#cba6f7"
+  "storm|#1f2335|#7aa2f7"
+  "ember|#1c1c1c|#ffaf5f"
+)
+
+die() { printf 'tmux-quad: %s\n' "$*" >&2; exit 1; }
+
+[[ -n ${TMUX:-} ]] || die "not inside a tmux session"
+
+window_name=${1:-quad}
+start_dir=$PWD
+current=$(tmux display-message -p '#{session_name}:#{window_index}')
+
+# Spawn one pane. $1 = spec, $2.. = tmux split arguments.
+spawn() {
+  local spec=$1; shift
+  local label bg accent id
+  IFS='|' read -r label bg accent <<<"$spec"
+  id=$(tmux "$@" -c "$start_dir" -P -F '#{pane_id}' \
+    -e "PROMPT_THEME=$label" -e "PANE_LABEL=$label")
+  tmux select-pane -t "$id" -P "bg=$bg" -T "$label"
+  # The border reads these pane options rather than pane_title, which any
+  # program (nvim, a shell's title escape) can overwrite.
+  tmux set-option -p -t "$id" @quad_label "$label"
+  tmux set-option -p -t "$id" @quad_accent "$accent"
+  printf '%s' "$id"
+}
+
+# Top-left lands in a brand new window inserted after the current one.
+tl=$(spawn "${PANES[0]}" new-window -a -t "$current" -n "$window_name")
+tr=$(spawn "${PANES[1]}" split-window -h -t "$tl")
+bl=$(spawn "${PANES[2]}" split-window -v -t "$tl")
+br=$(spawn "${PANES[3]}" split-window -v -t "$tr")
+
+# Label each pane on its top border, in its own accent color. Window-scoped,
+# so the rest of the session keeps its borders.
+tmux set-option -w -t "$tl" pane-border-status top
+tmux set-option -w -t "$tl" pane-border-format \
+  '#[fg=#{@quad_accent},bold] #{@quad_label} #[default]'
+
+tmux select-pane -t "$tl"
+
+printf 'tmux-quad: %s  [%s %s %s %s]\n' "$window_name" "$tl" "$tr" "$bl" "$br"

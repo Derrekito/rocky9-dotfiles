@@ -34,6 +34,44 @@ link "$repo/tmux" "$config/tmux"
 link "$repo/bash/inputrc" "$HOME/.inputrc"
 link "$repo/clang/clang-format" "$HOME/.clang-format"
 
+link "$repo/hunk/config.toml" "$config/hunk/config.toml"
+
+say "hunk"
+# Terminal diff viewer (github.com/modem-dev/hunk). Release binary, pinned and
+# checked against the release's SHA256SUMS; no npm or mise needed.
+hunk_version=0.22.0
+case "$(uname -m)" in
+  x86_64)  hunk_asset=hunkdiff-linux-x64
+           hunk_sha=5f280374f2ab0fc4c48266a9909ee1b0e0c59d77dd99a340f1c26f2125d2229b ;;
+  aarch64) hunk_asset=hunkdiff-linux-arm64
+           hunk_sha=da9f156427bce9a08609de66b310ba58f111ea31d6638ca7cdb08cf4a69d9e16 ;;
+  *)       hunk_asset= ;;
+esac
+hunk_dir="${XDG_DATA_HOME:-$HOME/.local/share}/rocky9-dotfiles/hunk-$hunk_version"
+if [ -z "$hunk_asset" ]; then
+  echo "  skipped: no hunk build for $(uname -m)"
+elif [ -x "$hunk_dir/hunk" ]; then
+  echo "  ok   hunk $hunk_version"
+else
+  tmp="$(mktemp -d)"
+  url="https://github.com/modem-dev/hunk/releases/download/v$hunk_version/$hunk_asset.tar.gz"
+  if curl -fsSL -o "$tmp/hunk.tar.gz" "$url" &&
+    echo "$hunk_sha  $tmp/hunk.tar.gz" | sha256sum -c --quiet; then
+    mkdir -p "$hunk_dir"
+    tar -xzf "$tmp/hunk.tar.gz" -C "$hunk_dir" --strip-components=1
+    echo "  installed hunk $hunk_version"
+  else
+    echo "FAILED: hunk download or checksum ($url)" >&2
+    rm -rf "$tmp"
+    exit 1
+  fi
+  rm -rf "$tmp"
+fi
+if [ -x "$hunk_dir/hunk" ]; then
+  mkdir -p "$HOME/.local/bin"
+  ln -sfn "$hunk_dir/hunk" "$HOME/.local/bin/hunk"
+fi
+
 say "Hooking into ~/.bashrc"
 line="[ -r \"$repo/bash/bashrc\" ] && source \"$repo/bash/bashrc\"  # rocky9-dotfiles"
 touch "$HOME/.bashrc"

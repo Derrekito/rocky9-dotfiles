@@ -116,6 +116,10 @@ venv-activate() {
   else echo "No such venv: $1"; fi
 }
 
+# ── Prompt ──────────────────────────────────────────────────────────────────
+# Two-line powerline prompt with git status; see prompt.bash for settings.
+source "$DOTFILES_DIR/bash/prompt.bash"
+
 # ── Local overrides ─────────────────────────────────────────────────────────
 DOTFILES_TMUX_ON_SSH=1   # set to 0 in local.sh to stop auto-attaching over SSH
 [ -r "$HOME/.config/rocky9-dotfiles/local.sh" ] && source "$HOME/.config/rocky9-dotfiles/local.sh"

@@ -28,7 +28,25 @@ if ! out=$(tmux -L smoke source-file "$HOME/.config/tmux/tmux.conf" 2>&1) || [ -
   echo "$out"
   fail "tmux.conf"
 fi
+# tmux-quad: four panes, each with its own prompt theme and border label.
+repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+tmux -L smoke resize-window -x 200 -y 50 2>/dev/null
+tmux -L smoke run-shell "$repo/bin/tmux-quad demo" >/dev/null 2>&1 || fail "tmux-quad"
+labels=$(tmux -L smoke list-panes -t demo -F '#{@quad_label}' 2>/dev/null | sort | tr '\n' ' ')
+[ "$labels" = "ember mocha moon storm " ] || fail "tmux-quad panes: '$labels'"
 tmux -L smoke kill-server 2>/dev/null
+
+echo "--- prompt"
+tmp=$(mktemp -d)
+git -C "$tmp" init -q && touch "$tmp/new"
+out=$(cd "$tmp" && TERM=xterm-256color COLUMNS=100 bash -ic \
+  '_p_build; printf "%s" "$_p_line1" | tr -d "\001\002" | sed "s/\x1b\[[0-9;]*m//g"' 2>&1)
+echo "$out"
+grep -q '?1' <<<"$out" || fail "prompt: no git status in '$out'"
+rm -rf "$tmp"
+
+echo "--- hunk"
+"$HOME/.local/bin/hunk" --version || fail "hunk"
 
 echo "--- bash"
 if ! out=$(TERM=xterm-256color bash -ic 'type ta cdd mkvenv >/dev/null && echo ok' 2>&1) || [ "$(tail -1 <<<"$out")" != ok ]; then
@@ -36,7 +54,7 @@ if ! out=$(TERM=xterm-256color bash -ic 'type ta cdd mkvenv >/dev/null && echo o
   fail "bashrc"
 fi
 
-git config --get-all include.path | grep -q rocky9-dotfiles || fail "git include.path"
+git config --get-all include.path | grep -qxF "$repo/git/gitconfig" || fail "git include.path"
 
 [ $status -eq 0 ] && echo "All checks passed."
 exit $status
