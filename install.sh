@@ -89,6 +89,10 @@ if [ ! -e "$local_dir/local.sh" ]; then
 # Machine-specific shell settings, sourced at the end of rocky9-dotfiles'
 # bashrc. Not part of the repo: work-only aliases, proxies, and anything else
 # that shouldn't be published go here.
+#
+# PROMPT_THEME=moon         # moon, mocha, storm, ember
+# PROMPT_GLYPHS=plain       # if the terminal font has no Nerd Font icons
+# DOTFILES_TMUX_ON_SSH=0    # don't auto-attach tmux on SSH login
 LOCAL
   echo "  created $local_dir/local.sh"
 fi
