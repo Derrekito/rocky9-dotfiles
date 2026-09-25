@@ -27,17 +27,16 @@ jobs:
       - name: Base tools
         run: dnf install -y git sudo
       - uses: actions/checkout@v4
-      - name: Packages
-        run: ./provision/packages.sh
       - name: Create a user
         run: |
           useradd -m dev
-          cp -a "$GITHUB_WORKSPACE" ~dev/rocky9-dotfiles
-          chown -R dev:dev ~dev/rocky9-dotfiles
-      - name: Install
-        run: sudo -iu dev ~dev/rocky9-dotfiles/install.sh
-      - name: Re-run install (idempotent)
-        run: sudo -iu dev ~dev/rocky9-dotfiles/install.sh
+          # A copy dev owns, to clone from (git refuses repos owned by others).
+          cp -a "$GITHUB_WORKSPACE" /tmp/src
+          chown -R dev:dev /tmp/src
+      - name: Bootstrap (what a Vagrant provision.sh calls)
+        run: DOTFILES_REPO=/tmp/src ./provision/bootstrap.sh dev
+      - name: Re-run bootstrap (idempotent)
+        run: DOTFILES_REPO=/tmp/src ./provision/bootstrap.sh dev
       - name: Build Go tools with Mason (Rocky's Go)
         # Normally installed in the background on first launch; done here so
         # the smoke test can check gopls attaches on Neovim 0.8.

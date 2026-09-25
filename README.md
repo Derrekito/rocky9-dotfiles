@@ -37,16 +37,26 @@ distro's (or corp's) settings in those files stay in charge.
 
 To update later: `git -C ~/rocky9-dotfiles pull && ~/rocky9-dotfiles/install.sh`.
 
-### Vagrant
+### Vagrant (or any root provisioning script)
 
-`Vagrantfile` builds a reference VM with both steps as provisioners:
-`provision/packages.sh` as root, then `provision/user.sh` (clone + `install.sh`)
-as the vagrant user. To use them in another Vagrantfile:
+`provision/bootstrap.sh <user>` does the whole thing in one call, as root:
+installs git, clones this repo into `~<user>/rocky9-dotfiles` as that user,
+runs `packages.sh`, then runs `install.sh` as the user. Re-running it updates
+everything. From a `provision.sh`:
 
-```ruby
-config.vm.provision "packages", type: "shell", privileged: true,  path: "provision/packages.sh"
-config.vm.provision "dotfiles", type: "shell", privileged: false, path: "provision/user.sh"
+```bash
+curl -fsSL https://raw.githubusercontent.com/Derrekito/rocky9-dotfiles/main/provision/bootstrap.sh | bash -s -- vagrant
 ```
+
+Or, without piping to bash:
+
+```bash
+dnf install -y git
+sudo -u vagrant git clone https://github.com/Derrekito/rocky9-dotfiles ~vagrant/rocky9-dotfiles
+~vagrant/rocky9-dotfiles/provision/bootstrap.sh vagrant
+```
+
+The `Vagrantfile` here builds a reference VM the same way.
 
 `DOTFILES_REPO=/vagrant vagrant up` provisions from the synced folder
 instead of GitHub, for testing commits before pushing.

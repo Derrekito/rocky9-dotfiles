@@ -3,6 +3,9 @@
 #
 #   vagrant up                                    # clones from GitHub
 #   DOTFILES_REPO=/vagrant vagrant up             # tests this checkout's commits
+#
+# The work VM's own provision.sh (runs as root) needs one line:
+#   curl -fsSL https://raw.githubusercontent.com/Derrekito/rocky9-dotfiles/main/provision/bootstrap.sh | bash -s -- vagrant
 Vagrant.configure("2") do |config|
   config.vm.box = "rockylinux/9"
   config.vm.hostname = "rocky9-dev"
@@ -16,10 +19,7 @@ Vagrant.configure("2") do |config|
     lv.cpus = 2
   end
 
-  config.vm.provision "packages", type: "shell", privileged: true,
-    path: "provision/packages.sh"
-
-  config.vm.provision "dotfiles", type: "shell", privileged: false,
-    path: "provision/user.sh",
-    env: { "DOTFILES_REPO" => ENV.fetch("DOTFILES_REPO", "") }
+  config.vm.provision "dotfiles", type: "shell", privileged: true,
+    path: "provision/bootstrap.sh", args: ["vagrant"],
+    env: { "DOTFILES_REPO" => ENV.fetch("DOTFILES_REPO", "") }.reject { |_, v| v.empty? }
 end
