@@ -38,5 +38,5 @@ rose-pine                  rose-pine/neovim                           ff483051a4
 zen-mode.nvim              folke/zen-mode.nvim                        8564ce6d29ec7554eb9df578efa882d33b3c23a7  start  # 2025-10-28, your lazy-lock commit
 vim-be-good                ThePrimeagen/vim-be-good                   0ae3de14eb8efc6effe7704b5e46495e91931cc5  start  # 2024-12-04, your lazy-lock commit
 nvim-type-anim             Derrekito/nvim-type-anim                   a83cc5fcbe092fa606dd0cc611fc0d5c6872cfb6  start  # 2024-01-14, your lazy-lock commit
-devdocs.nvim               Derrekito/devdocs.nvim                     7982f120b54f9c87a00b3c5ae8a2511cef88e5c8  start  # 2026-09-09, current main
+devdocs.nvim               Derrekito/devdocs.nvim                     ac008260a1a724db63adfc7d75c03e35c8bc2fd1  start  # 2026-09-25, current main (converter runs on Python 3.9)
 diagnostic-picker.nvim     Derrekito/diagnostic-picker.nvim           922a034e38a9d7707aedd3512749c2f4450866d6  start  # 2026-06-19, current main

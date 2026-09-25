@@ -22,6 +22,22 @@ for mod in telescope cmp lspconfig mason nvim-treesitter conform lint aerial tro
     fail "nvim: require('$mod')"
 done
 
+echo "--- devdocs.nvim"
+# :DevdocsUpdate shells out to `python scripts/convert.py`; convert a tiny
+# page with the system python to prove that path works (Rocky's 3.9 + bs4).
+dd="${XDG_DATA_HOME:-$HOME/.local/share}/nvim/site/pack/plugins/start/devdocs.nvim"
+tmp=$(mktemp -d)
+mkdir -p "$tmp/pages"
+printf '<h1>declare</h1><p>Declare <code>variables</code>.</p><pre>declare -a arr</pre>\n' >"$tmp/pages/t.html"
+if out=$(python "$dd/scripts/convert.py" "$tmp" t --lang=bash 2>&1) && grep -q 'declare -a arr' <<<"$out"; then
+  echo "converter ok ($(python --version 2>&1))"
+else
+  echo "$out"
+  fail "devdocs converter"
+fi
+rm -rf "$tmp"
+[ -n "$(ls -A "$dd/manuals/cpp" 2>/dev/null)" ] || fail "devdocs C++ manual submodule missing"
+
 echo "--- $(tmux -V)"
 tmux -L smoke -f /dev/null new-session -d
 if ! out=$(tmux -L smoke source-file "$HOME/.config/tmux/tmux.conf" 2>&1) || [ -n "$out" ]; then
