@@ -58,7 +58,10 @@ while read -r name repo sha kind _ <&3; do
     git -C "$dest" cat-file -e "$sha^{commit}" 2>/dev/null ||
       git -C "$dest" fetch --quiet origin "$sha" </dev/null || true
   fi
-  if git -C "$dest" -c advice.detachedHead=false checkout --quiet "$sha" </dev/null; then
+  if git -C "$dest" -c advice.detachedHead=false checkout --quiet "$sha" </dev/null &&
+    # Submodules at the commits the pin records (devdocs.nvim's C++ manual).
+    { [ ! -f "$dest/.gitmodules" ] ||
+      git -C "$dest" submodule update --init --recursive --quiet </dev/null; }; then
     printf '  ok   %-28s %s\n' "$name" "${sha:0:10}"
   else
     failed+=("$name (checkout $sha)")
