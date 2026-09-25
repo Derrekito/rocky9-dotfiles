@@ -12,9 +12,11 @@ dnf install -y dnf-plugins-core epel-release
 # EPEL expects CodeReady Builder for some of its dependencies.
 dnf config-manager --set-enabled crb
 
+# curl comes from curl-minimal, already in every Rocky 9 image; asking for
+# the full curl package conflicts with it.
 dnf install -y \
   neovim tmux git make gcc gcc-c++ \
-  ripgrep fzf tree unzip tar gzip curl wget \
+  ripgrep fzf tree unzip tar gzip wget \
   python3 python3-pip \
   cppcheck clang-tools-extra \
   bash-completion hostname psmisc procps-ng findutils which
