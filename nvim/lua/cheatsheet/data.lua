@@ -434,6 +434,28 @@ M.sections = {
     },
   },
   {
+    category = "Markdown",
+    items = {
+      "n: <leader>mt         → Toggle rendered / source view (all markdown buffers)",
+      "n: <leader>mG         → Link graph (:MarkdownGraph [hops], ! = whole vault)",
+      "n: <leader>mp         → Present as slides (--- or #/## split; n/p, e edit, q quit)",
+      "n: <leader>me         → Export window: PDF doc / DOCX / PDF slides, options, command preview",
+      "n: <leader>mP         → Export PDF slides directly (:MarkdownExport slides)",
+      "n: ]] / [[            → Next / previous heading",
+      "n: <leader>o          → Heading outline (aerial)",
+      "n: za / zM / zR       → Fold section / fold all / open all",
+      "n: <leader>mx         → Toggle checkbox",
+      "n/v: <leader>mb       → Bold word / selection",
+      "n/v: <leader>mi       → Italic word / selection",
+      "n/v: <leader>mc       → Inline code word / selection",
+      "n/v: <leader>m~       → Strikethrough word / selection",
+      "v: <leader>ml         → Link selection, cursor in the URL",
+      "i: <CR>               → Continue list (empty item ends it)",
+      "i: <C-t> / <C-d>      → Indent / outdent list item",
+      "n: gN                 → Renumber numbered list",
+    },
+  },
+  {
     category = "Table Mode (Markdown, Normal Mode)",
     items = {
       "n: <leader>tm         → Toggle table mode",

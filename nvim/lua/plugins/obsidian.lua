@@ -15,6 +15,11 @@ local opts = {
     min_chars = 2,
   },
 
+  -- render-markdown.nvim draws checkboxes, bullets and links; obsidian's own
+  -- UI layer draws them a second time on top (doubled bullets, misaligned
+  -- checkboxes).
+  ui = { enable = false },
+
   -- Optional: wiki_link_func if you want fancy links
   -- wiki_link_func = function(opts)
   --   return string.format("[[%s]]", opts.title)

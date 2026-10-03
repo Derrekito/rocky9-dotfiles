@@ -25,7 +25,7 @@ require("mason").setup({
 -- mason-lspconfig v1: installs the servers on first launch. (v2's
 -- automatic_enable needs 0.11; the setup loop below starts them instead.)
 require("mason-lspconfig").setup({
-  ensure_installed = { 'clangd', 'rust_analyzer', 'gopls', 'bashls', 'lua_ls', 'marksman', 'pylsp', 'jsonls', 'texlab' },
+  ensure_installed = { 'clangd', 'rust_analyzer', 'gopls', 'bashls', 'lua_ls', 'marksman', 'pylsp', 'jsonls', 'texlab', 'harper_ls' },
 })
 
 -- Non-LSP tooling (linters, formatters) that conform.nvim and nvim-lint shell
@@ -176,6 +176,17 @@ local servers = {
   bashls = {},
   jsonls = {},
   texlab = {},
+
+  -- Grammar/spelling for prose only. Out of the box harper checks comments
+  -- in every programming language too, which is mostly noise in code.
+  harper_ls = {
+    filetypes = { "markdown", "text", "gitcommit" },
+    settings = {
+      ["harper-ls"] = {
+        markdown = { IgnoreLinkTitle = true },
+      },
+    },
+  },
 
   -- cmake-language-server is installed via pipx (on PATH), not mason.
   -- NOTE: the pipx venv must pin pygls>=1.1.1,<2.0 — pygls 2.x removed the

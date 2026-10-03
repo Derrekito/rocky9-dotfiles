@@ -7,7 +7,12 @@ require("nvim-treesitter.configs").setup({
     "javascript", "typescript", "c", "cpp", "lua", "rust",
     "vim", "help", "query", "latex", "markdown", -- "help" is vimdoc's pre-0.9 name
     "markdown_inline", "make", "cuda",
-    "go", "gomod", "gosum", "gowork"
+    "go", "gomod", "gosum", "gowork",
+    -- Common fenced-code languages in markdown (yaml also covers
+    -- frontmatter); without a parser a fence is one flat color. (sql would
+    -- need the tree-sitter CLI to generate at this nvim-treesitter version.)
+    "python", "yaml", "toml", "html", "css", "diff", "regex",
+    "mermaid", "json", "bash",
   },
   -- Headless (install.sh, CI): compile parsers before exiting, so they exist
   -- before the first real launch. Interactive: compile in the background.

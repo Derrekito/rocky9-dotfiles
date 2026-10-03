@@ -133,6 +133,49 @@ do
   q.parse = q.parse or q.parse_query
 end
 
+-- 0.9: vim.treesitter.get_captures_at_pos is the new name for
+-- get_captures_at_position (render-markdown uses it).
+vim.treesitter.get_captures_at_pos = vim.treesitter.get_captures_at_pos
+  or vim.treesitter.get_captures_at_position
+
+-- 0.10: vim.keycode(str) is nvim_replace_termcodes with the usual flags.
+if not vim.keycode then
+  function vim.keycode(str)
+    return vim.api.nvim_replace_termcodes(str, true, true, true)
+  end
+end
+
+-- 0.10: vim.ui.open(path) opens a file or URL with the desktop's handler.
+-- Over SSH there is usually none; then it just says where the file is.
+if not vim.ui.open then
+  function vim.ui.open(path)
+    for _, cmd in ipairs({ "xdg-open", "gio" }) do
+      if vim.fn.executable(cmd) == 1 and (os.getenv("DISPLAY") or os.getenv("WAYLAND_DISPLAY")) then
+        local argv = cmd == "gio" and { "gio", "open", path } or { cmd, path }
+        vim.fn.jobstart(argv, { detach = true })
+        return
+      end
+    end
+    vim.notify("No desktop to open it with: " .. path, vim.log.levels.INFO)
+  end
+end
+
+-- 0.11: vim.fs.relpath(base, target): target relative to base, or nil when
+-- target isn't inside base.
+if not vim.fs.relpath then
+  function vim.fs.relpath(base, target)
+    base = vim.fs.normalize(base):gsub("/$", "")
+    target = vim.fs.normalize(target)
+    if target == base then
+      return "."
+    end
+    if target:sub(1, #base + 1) == base .. "/" then
+      return target:sub(#base + 2)
+    end
+    return nil
+  end
+end
+
 -- 0.9: vim.health.start/ok/warn/error/info are the new names for
 -- report_start/report_ok/... (plugin :checkhealth pages use the new ones).
 do
@@ -179,7 +222,9 @@ if not vim.system then
 
     local ok, job = pcall(vim.fn.jobstart, cmd, {
       cwd = opts.cwd,
-      env = opts.env,
+      -- An empty Lua table converts to an empty *list*, which jobstart
+      -- rejects as env; vim.system treats {} as "no extra variables".
+      env = (opts.env and next(opts.env)) and opts.env or nil,
       clear_env = opts.clear_env,
       stdout_buffered = true,
       stderr_buffered = true,
@@ -189,7 +234,7 @@ if not vim.system then
     })
     if not ok or job <= 0 then
       local name = type(cmd) == "table" and cmd[1] or tostring(cmd)
-      error(("vim.system: failed to start %s"):format(name))
+      error(("vim.system: failed to start %s: %s"):format(name, ok and job or tostring(job)))
     end
 
     if type(opts.stdin) == "string" or type(opts.stdin) == "table" then
@@ -248,5 +293,24 @@ if not has("0.10") then
   end
   vim.api.nvim_win_set_config = function(win, config)
     return set_config(win, clean(config))
+  end
+end
+
+-- 0.9 added the WinResized event. Registering an autocmd for an event 0.8
+-- doesn't know fails outright ("unexpected event"), which kills the whole
+-- setup of the plugin asking (render-markdown refreshes on WinResized). Drop
+-- just that event; nothing would have fired it anyway.
+if not has("0.9") then
+  local unknown = { WinResized = true }
+  local create = vim.api.nvim_create_autocmd
+  vim.api.nvim_create_autocmd = function(event, opts)
+    if type(event) == "string" then
+      event = { event }
+    end
+    local known = vim.tbl_filter(function(e) return not unknown[e] end, event)
+    if #known == 0 then
+      return -1 -- no autocmd created; callers only keep the id
+    end
+    return create(known, opts)
   end
 end

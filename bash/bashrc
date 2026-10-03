@@ -14,6 +14,9 @@ _add_path() {
   [ -d "$1" ] || return 0
   case ":$PATH:" in *":$1:"*) ;; *) PATH="$1:$PATH" ;; esac
 }
+# `sudo -i` (and so CI and Vagrant provisioning) uses sudo's secure_path,
+# which leaves out /usr/local/bin, where npm -g installs (mermaid-cli).
+_add_path /usr/local/bin
 _add_path "$HOME/go/bin"
 _add_path "$HOME/.cargo/bin"
 _add_path "$HOME/.local/bin"

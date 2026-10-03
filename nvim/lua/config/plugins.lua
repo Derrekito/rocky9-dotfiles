@@ -29,6 +29,8 @@ local order = {
   "nvim-dap",
   "nvim-lint",
   "obsidian",
+  "render-markdown",   -- after obsidian, whose UI it replaces
+  "bullets",
   "table-mode",
   "tests",
   "tree",

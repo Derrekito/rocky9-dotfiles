@@ -15,6 +15,7 @@ adjusted for the older versions Rocky 9 ships (Neovim 0.8 from EPEL, tmux
 | `clang/clang-format` | LLVM style, Allman braces | `~/.clang-format` (symlink) |
 | `hunk/config.toml` | Rosé Pine Moon theme for [hunk](https://github.com/modem-dev/hunk) | `~/.config/hunk/config.toml` (symlink) |
 | `bin/` | `tmux-attach`, `tmux-quad` | on `PATH` via `bashrc` |
+| `texmf/` | RosePineMoon Beamer theme parts, for nvim's `:MarkdownExport slides` | `~/texmf/tex/latex/beamer/` (symlink) |
 
 `install.sh` also installs hunk itself: the pinned release binary, checked
 against its SHA256, into `~/.local/bin/hunk`.
@@ -29,6 +30,11 @@ git clone https://github.com/Derrekito/rocky9-dotfiles ~/rocky9-dotfiles
 sudo ~/rocky9-dotfiles/provision/packages.sh   # dnf: EPEL, neovim, tmux, toolchain, node 22
 ~/rocky9-dotfiles/install.sh                   # links, plugins, parsers
 ```
+
+Optional: `sudo ~/rocky9-dotfiles/provision/export-tools.sh` adds TeX Live and
+mermaid-cli, so Neovim's `:MarkdownExport` can make PDFs and draw diagrams
+(DOCX works without it). Several hundred MB, so it isn't part of the default
+install.
 
 `install.sh` is safe to re-run. It moves anything in its way to
 `<name>.bak.<timestamp>` rather than deleting it, and it adds lines to

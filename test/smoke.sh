@@ -49,6 +49,13 @@ else
   echo "gopls not built yet (Mason builds it on first launch)"
 fi
 
+echo "--- markdown"
+repo_test="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+out=$(nvim --headless -c "luafile $repo_test/markdown.lua" 2>&1)
+rc=$?
+grep -E '^(ok  |FAIL|skip)' <<<"$out"
+[ $rc -eq 0 ] || { echo "$out" | grep -v -E '^(ok  |skip)' | tail -20; fail "markdown"; }
+
 echo "--- devdocs.nvim"
 # :DevdocsUpdate shells out to `python scripts/convert.py`; convert a tiny
 # page with the system python to prove that path works (Rocky's 3.9 + bs4).

@@ -35,6 +35,16 @@ link "$repo/bash/inputrc" "$HOME/.inputrc"
 link "$repo/clang/clang-format" "$HOME/.clang-format"
 
 link "$repo/hunk/config.toml" "$config/hunk/config.toml"
+# Beamer theme parts for :MarkdownExport slides (TeX finds ~/texmf on its own).
+# One link per file: kpathsea doesn't descend into a symlinked directory.
+beamer="$HOME/texmf/tex/latex/beamer/RosePineMoon"
+if [ -L "$beamer" ]; then
+  mv "$beamer" "$beamer.bak.$stamp"
+  echo "  moved existing $beamer to $beamer.bak.$stamp"
+fi
+for sty in "$repo"/texmf/beamer/RosePineMoon/*.sty; do
+  link "$sty" "$beamer/$(basename "$sty")"
+done
 
 say "hunk"
 # Terminal diff viewer (github.com/modem-dev/hunk). Release binary, pinned and
