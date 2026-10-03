@@ -39,7 +39,8 @@ chrome=/usr/lib64/chromium-browser/headless_shell
 args='[]'
 # Chromium's sandbox needs user namespaces, which containers usually lack.
 # On a VM it works, so only containers get --no-sandbox.
-if [ -f /.dockerenv ] || [ -f /run/.containerenv ]; then
+# (/.dockerenv isn't there during `docker build`, so ask systemd too.)
+if systemd-detect-virt --container -q 2>/dev/null || [ -f /.dockerenv ] || [ -f /run/.containerenv ]; then
   args='["--no-sandbox"]'
 fi
 mkdir -p /etc/mermaid

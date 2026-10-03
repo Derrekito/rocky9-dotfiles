@@ -46,6 +46,22 @@ lint.linters_by_ft = {
   -- typescript = { "eslint_d" },
 }
 
+-- Linters for the current buffer whose executable is installed. nvim-lint
+-- raises an error ("Error running markdownlint: ENOENT") for a missing one on
+-- every lint, and on a new machine Mason is still installing them in the
+-- background. Checked per lint, so each starts working once Mason has it.
+local function installed_linters()
+  local names = lint.linters_by_ft[vim.bo.filetype] or {}
+  return vim.tbl_filter(function(name)
+    local ok, linter = pcall(function() return lint.linters[name] end)
+    if not ok or not linter then return false end
+    if type(linter) == "function" then linter = linter() end
+    local cmd = linter.cmd
+    if type(cmd) == "function" then cmd = cmd() end
+    return type(cmd) == "string" and vim.fn.executable(cmd) == 1
+  end, names)
+end
+
 -- Create autocommand for linting
 local lint_augroup = vim.api.nvim_create_augroup("lint", { clear = true })
 
@@ -55,15 +71,16 @@ vim.api.nvim_create_autocmd({ "BufEnter", "BufWritePost", "InsertLeave" }, {
     -- Only lint if file exists and is not too large
     local max_filesize = 100 * 1024 -- 100 KB
     local ok, stats = pcall(vim.loop.fs_stat, vim.api.nvim_buf_get_name(0))
-    if ok and stats and stats.size < max_filesize then
-      lint.try_lint()
+    local names = installed_linters()
+    if ok and stats and stats.size < max_filesize and #names > 0 then
+      lint.try_lint(names)
     end
   end,
 })
 
 -- Manual lint command
 vim.api.nvim_create_user_command("Lint", function()
-  lint.try_lint()
+  lint.try_lint(installed_linters())
 end, {
   desc = "Trigger linting for current file",
 })

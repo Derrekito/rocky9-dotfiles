@@ -51,9 +51,14 @@ fi
 
 echo "--- markdown"
 repo_test="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-out=$(nvim --headless -c "luafile $repo_test/markdown.lua" 2>&1)
+# pcall: an uncaught Lua error under -c luafile leaves headless nvim running
+# forever (CI then sits until the job timeout); report it and exit instead.
+# timeout: backstop for anything else that hangs.
+lua="local ok, e = pcall(dofile, '$repo_test/markdown.lua'); if not ok then io.stdout:write('\nFAIL lua error: ' .. tostring(e) .. '\n'); vim.cmd('cq') end"
+out=$(timeout 900 nvim --headless -c "lua $lua" 2>&1)
 rc=$?
-grep -E '^(ok  |FAIL|skip)' <<<"$out"
+# Results can share a line with other headless output; put each on its own.
+sed -E 's/(ok   |FAIL |skip )/\n\1/g' <<<"$out" | grep -E '^(ok  |FAIL|skip)'
 [ $rc -eq 0 ] || { echo "$out" | grep -v -E '^(ok  |skip)' | tail -20; fail "markdown"; }
 
 echo "--- devdocs.nvim"
