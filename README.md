@@ -43,6 +43,18 @@ distro's (or corp's) settings in those files stay in charge.
 
 To update later: `git -C ~/rocky9-dotfiles pull && ~/rocky9-dotfiles/install.sh`.
 
+### Machines with an internal package mirror
+
+`packages.sh` assumes the stock Rocky repos plus EPEL and CodeReady Builder.
+A work machine whose dnf only sees a company mirror may lack some of those
+packages, have them under other repo names, or carry different versions. Run
+`./doctor.sh` first (no root needed, installs nothing): it lists the enabled
+repos and where they're served from, then checks every package `packages.sh`
+installs (`--export` adds `export-tools.sh`'s) and the Neovim, tmux and Node
+versions the pinned config assumes. It exits non-zero if something
+`packages.sh` needs isn't available, so you know before the install stops
+halfway.
+
 ### Vagrant (or any root provisioning script)
 
 `provision/bootstrap.sh <user>` does the whole thing in one call, as root:
