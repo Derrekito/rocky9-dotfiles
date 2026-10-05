@@ -1,66 +1,58 @@
--- obsidian.nvim v3.9.0 (supports Neovim 0.8+).
-local opts = {
-  workspaces = {
-    { name = "personal",  path = "~/vaults/content/personal" },
-    { name = "work",      path = "~/vaults/content/work" },
-    { name = "templates", path = "~/vaults/content/Templates" },
-    --{ name = "pylabs",    path = "~/Projects/stochastic-python-labs" },
+-- obsidian-nvim/obsidian.nvim, the maintained community fork of
+-- epwalsh/obsidian.nvim (unmaintained since 2024).
+--
+-- In vault notes: gf / <CR> follow links (<CR> also toggles checkboxes),
+-- ]o [o jump between links, completion of [[links]] and #tags comes from its
+-- built-in LSP (nvim-cmp picks it up via cmp-nvim-lsp), and
+-- :Obsidian backlinks / links / quick_switch / search / tags / rename / ...
+return {
+  "obsidian-nvim/obsidian.nvim",
+  version = "*",
+  ft = "markdown",
+  dependencies = {
+    "nvim-lua/plenary.nvim",
   },
+  opts = {
+    -- `:Obsidian <subcommand>` only; the old :ObsidianFoo names go in 4.0.
+    legacy_commands = false,
 
-  preferred_link_style = "markdown",  -- moved to top-level
-  new_notes_location = "current_dir", -- moved to top-level
+    workspaces = {
+      { name = "personal",  path = "~/vaults/content/personal" },
+      { name = "work",      path = "~/vaults/content/work" },
+      { name = "templates", path = "~/vaults/content/Templates" },
+    },
 
-  completion = {
-    nvim_cmp = true,
-    min_chars = 2,
+    link = { style = "markdown" },
+    new_notes_location = "current_dir",
+
+    completion = { min_chars = 2 },
+
+    -- render-markdown.nvim draws checkboxes, bullets and links; obsidian's own
+    -- UI layer draws them a second time on top (doubled bullets, misaligned
+    -- checkboxes).
+    ui = { enable = false },
   },
-
-  -- render-markdown.nvim draws checkboxes, bullets and links; obsidian's own
-  -- UI layer draws them a second time on top (doubled bullets, misaligned
-  -- checkboxes).
-  ui = { enable = false },
-
-  -- Optional: wiki_link_func if you want fancy links
-  -- wiki_link_func = function(opts)
-  --   return string.format("[[%s]]", opts.title)
-  -- end,
-}
-
--- Under lazy.nvim this only loaded once a markdown file opened. It now loads at
--- startup, so skip vaults that don't exist on this machine (obsidian.nvim errors
--- on a missing workspace path), and skip the plugin entirely if none do.
-opts.workspaces = vim.tbl_filter(function(ws)
-  return vim.fn.isdirectory(vim.fn.expand(ws.path)) == 1
-end, opts.workspaces)
-if #opts.workspaces == 0 then
-  return
-end
-
-require("obsidian").setup(opts)
-
-local function is_in_vault()
-  local current_file = vim.api.nvim_buf_get_name(0)
-  local normalized_file = vim.fn.fnamemodify(current_file, ":p")
-  for _, workspace in ipairs(opts.workspaces) do
-    local vault_path = vim.fn.expand(workspace.path)
-    if normalized_file:find(vault_path, 1, true) == 1 then
-      return true
+  config = function(_, opts)
+    -- Only register vault workspaces whose directory exists on THIS machine:
+    -- obsidian.nvim errors on a missing workspace path, and this config is
+    -- shared with machines that have no ~/vaults. No vault, no setup.
+    opts.workspaces = vim.tbl_filter(function(ws)
+      return vim.fn.isdirectory(vim.fn.expand(ws.path)) == 1
+    end, opts.workspaces)
+    if #opts.workspaces == 0 then
+      return
     end
-  end
-  return false
-end
 
-vim.api.nvim_create_autocmd("BufEnter", {
-  pattern = "*.md",
-  callback = function()
-    if is_in_vault() then
-      vim.keymap.set("n", "gf", function()
-        return require("obsidian").util.gf_passthrough()
-      end, { noremap = false, expr = true, buffer = true })
+    require("obsidian").setup(opts)
 
-      vim.keymap.set("n", "<leader>ch", function()
-        return require("obsidian").util.toggle_checkbox()
-      end, { buffer = true })
-    end
+    -- Keep the old checkbox key in vault notes (<CR> on a checkbox also works).
+    vim.api.nvim_create_autocmd("User", {
+      group = vim.api.nvim_create_augroup("UserObsidianKeymaps", { clear = true }),
+      pattern = "ObsidianNoteEnter",
+      callback = function(ev)
+        vim.keymap.set("n", "<leader>ch", "<cmd>Obsidian toggle_checkbox<cr>",
+          { buffer = ev.buf, desc = "Obsidian: toggle checkbox" })
+      end,
+    })
   end,
-})
+}

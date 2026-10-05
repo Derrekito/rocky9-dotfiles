@@ -1,7 +1,19 @@
--- neotest, pinned to v3.4.7 (v4+ uses treesitter APIs that need 0.9).
--- https://github.com/nvim-neotest/neotest
-require("neotest").setup({
-  adapters = {
-    require("neotest-python")
-  }
-})
+-- https://github.com/nvim-neotest/neotest?tab=readme-ov-file
+return {
+  "nvim-neotest/neotest",
+  cmd = "Neotest",
+  -- (FixCursorHold.nvim dropped: it works around a CursorHold bug fixed in
+  -- Neovim 0.8, and neotest no longer asks for it.)
+  dependencies = {
+    "nvim-neotest/nvim-nio",
+    "nvim-lua/plenary.nvim",
+    "nvim-neotest/neotest-python"
+  },
+  config = function()
+    require("neotest").setup({
+      adapters = {
+        require("neotest-python")
+      }
+    })
+  end
+}

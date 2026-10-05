@@ -15,7 +15,7 @@ dnf config-manager --set-enabled crb
 # curl comes from curl-minimal, already in every Rocky 9 image; asking for
 # the full curl package conflicts with it.
 dnf install -y \
-  neovim tmux git make gcc gcc-c++ \
+  tmux git make gcc gcc-c++ \
   ripgrep fzf tree unzip tar gzip wget \
   python3 python3-pip \
   python-unversioned-command python3-beautifulsoup4 python3-lxml \

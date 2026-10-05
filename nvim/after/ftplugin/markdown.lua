@@ -2,10 +2,9 @@ vim.opt_local.wrap = true
 vim.opt_local.linebreak = true
 vim.opt_local.breakindent = true
 
--- Fold by heading section (treesitter), everything open on load. Neovim's
--- own vim.treesitter.foldexpr() is 0.9+; nvim-treesitter's works on 0.8.
+-- Fold by heading section (treesitter), everything open on load.
 vim.opt_local.foldmethod = "expr"
-vim.opt_local.foldexpr = vim.treesitter.foldexpr and "v:lua.vim.treesitter.foldexpr()" or "nvim_treesitter#foldexpr()"
+vim.opt_local.foldexpr = "v:lua.vim.treesitter.foldexpr()"
 vim.opt_local.foldlevel = 99
 
 local md = require("config.markdown")

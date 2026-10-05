@@ -14,5 +14,6 @@ vim.opt_local.indentexpr = ""
 -- Set cindent options for proper brace indentation
 vim.opt_local.cinoptions = "{1s,>2s,e-1s,^-1s,n-1s,:1s,=1s,g1s,h1s,p2s,t0,+1s,c3,(0,u0,)20,*30"
 
--- Pull indent width / tabs from the buffer's effective .clang-format.
-require("clang-format-indent").apply()
+-- Indent width / tabs from the buffer's effective .clang-format are applied
+-- by the c/cpp FileType autocmd in lua/config/options.lua, which runs after
+-- this file.

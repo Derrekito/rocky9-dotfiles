@@ -47,11 +47,17 @@ while read -r name repo sha kind _ <&3; do
   # A dev symlink whose checkout has since gone away.
   if [ -L "$dest" ]; then rm "$dest"; fi
 
+  url="https://github.com/$repo.git"
   if [ ! -d "$dest/.git" ]; then
-    if ! git clone --quiet --filter=blob:none "https://github.com/$repo.git" "$dest" </dev/null; then
+    if ! git clone --quiet --filter=blob:none "$url" "$dest" </dev/null; then
       failed+=("$name (clone)")
       continue
     fi
+  elif [ "$(git -C "$dest" remote get-url origin 2>/dev/null)" != "$url" ]; then
+    # plugins.lock moved this plugin to another repo (a fork, a rename): the
+    # old origin can't serve the new pin.
+    git -C "$dest" remote set-url origin "$url"
+    echo "  repo $name -> $repo"
   fi
   if ! git -C "$dest" cat-file -e "$sha^{commit}" 2>/dev/null; then
     git -C "$dest" fetch --quiet --tags origin </dev/null || true
@@ -79,17 +85,26 @@ if [ -d "$fzf" ]; then
 fi
 
 # Help tags, so :help works for every plugin. -u NONE: don't load the config.
+# install.sh puts its pinned Neovim first on PATH before calling this.
 if command -v nvim >/dev/null; then
   nvim --headless -u NONE \
     -c "lua for _, d in ipairs(vim.fn.glob('$pack/*/*/doc', false, true)) do pcall(vim.cmd, 'helptags ' .. vim.fn.fnameescape(d)) end" \
     -c 'qa!' >/dev/null 2>&1 || true
 fi
 
-# Anything in the pack dir that plugins.lock doesn't list is left alone.
+# Neovim loads everything in start/, so a plugin plugins.lock no longer lists
+# (say, after an update dropped or renamed it) would still load. Move it out
+# of the package path instead of deleting it.
+unlisted="${XDG_DATA_HOME:-$HOME/.local/share}/nvim/plugins-unlisted"
 for dir in "$pack"/start/* "$pack"/opt/*; do
-  [ -e "$dir" ] || continue
+  [ -e "$dir" ] || [ -L "$dir" ] || continue
   rel="${dir#"$pack"/}"
-  if [ -z "${wanted[$rel]:-}" ]; then echo "  note: $rel is not in plugins.lock (left alone)"; fi
+  if [ -z "${wanted[$rel]:-}" ]; then
+    dest="$unlisted/$rel.$(date +%Y%m%d%H%M%S)"
+    mkdir -p "$(dirname "$dest")"
+    mv "$dir" "$dest"
+    echo "  moved $rel (not in plugins.lock) to $dest"
+  fi
 done
 
 if [ ${#failed[@]} -gt 0 ]; then

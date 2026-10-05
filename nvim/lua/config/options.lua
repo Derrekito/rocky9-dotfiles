@@ -1,15 +1,19 @@
--- Function to setup smarter indentation with word wrapping
-local function setup_smart_indentation_wrapping()
-  vim.wo.wrap = true
-  vim.wo.linebreak = true
-  vim.wo.breakindent = true
-  vim.wo.breakindentopt = "shift:2"
-end
+-- Editor options + option-related autocmds.
+--
+-- Every autocmd here is in the UserOptions group. The config-reload autocmd at
+-- the bottom re-requires this file on each save of a config file; without a
+-- cleared group each reload would add another copy of every autocmd,
+-- including the reload autocmd itself, so the handlers doubled per save.
+local group = vim.api.nvim_create_augroup("UserOptions", { clear = true })
 
--- Call the function to apply settings
-setup_smart_indentation_wrapping()
+-- Soft wrap is off by default, but when it is turned on (markdown, zen-mode)
+-- wrapped lines break at words and keep their indent.
+vim.opt.wrap = false
+vim.opt.linebreak = true
+vim.opt.breakindent = true
+vim.opt.breakindentopt = "shift:2"
 
-vim.wo.cursorline = true
+vim.opt.cursorline = true
 vim.opt.nu = true
 vim.opt.relativenumber = true
 
@@ -24,9 +28,11 @@ vim.opt.smartindent = true
 vim.opt.swapfile = false
 vim.opt.backup = false
 vim.opt.undodir = os.getenv("HOME") .. "/.vim/undodir"
+vim.fn.mkdir(vim.o.undodir, "p")
 vim.opt.undofile = true
 
-vim.opt.hlsearch = false
+-- Highlight matches; <Esc> clears (config.keymaps).
+vim.opt.hlsearch = true
 vim.opt.incsearch = true
 
 vim.opt.termguicolors = true
@@ -34,26 +40,20 @@ vim.opt.termguicolors = true
 -- Suppress the intro/splash screen on argument-less launches
 vim.opt.shortmess:append("I")
 
-vim.opt.scrolloff = 8
+-- Keep the cursor line vertically centered.
+vim.opt.scrolloff = 999
 vim.opt.signcolumn = "auto"
 vim.opt.isfname:append("@-@")
 
 vim.opt.updatetime = 50
 
 vim.opt.colorcolumn = "80"
--- Test change 5 to trigger reload
 
-vim.o.scrolloff = 999
-
-vim.wo.wrap = false
-
-vim.g.mapleader = " "
-
--- Enable clipboard integration
-vim.opt.clipboard:append("unnamedplus")
+vim.o.conceallevel = 2
 
 -- Makefile tabs
 vim.api.nvim_create_autocmd("FileType", {
+  group = group,
   pattern = "make",
   callback = function()
     vim.opt_local.tabstop = 8
@@ -67,25 +67,35 @@ vim.api.nvim_create_autocmd("FileType", {
 -- own settings instead of a hardcoded 4. This FileType autocmd fires after
 -- after/ftplugin, so it is the last word on these options.
 vim.api.nvim_create_autocmd("FileType", {
-  pattern = { "c", "cpp", "h", "hpp" },
-  callback = function()
-    vim.opt_local.expandtab = true
-    vim.opt_local.cindent = true
-    require("clang-format-indent").apply()
+  group = group,
+  pattern = { "c", "cpp", "cuda" },
+  callback = function(args)
+    vim.bo[args.buf].expandtab = true
+    vim.bo[args.buf].cindent = true
+    require("clang-format-indent").apply(args.buf)
   end,
 })
 
+-- *.latex files are pandoc templates, not LaTeX documents; the stock
+-- detection calls them tex. See after/ftplugin/pandoc-latex.lua.
+vim.filetype.add({ extension = { latex = "pandoc-latex" } })
 
-vim.o.conceallevel = 2
-
--- Auto-reload files changed outside of Neovim
+-- Auto-reload files changed outside of Neovim.
+-- :checktime raises E11 in the command-line window (q:), and CursorHold
+-- fires there every 'updatetime' ms, so skip it in that window.
 vim.opt.autoread = true
 vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter", "CursorHold" }, {
-  command = "checktime",
+  group = group,
+  callback = function()
+    if vim.fn.getcmdwintype() == "" then
+      vim.cmd("checktime")
+    end
+  end,
 })
 
 -- Auto-reload config on save
 vim.api.nvim_create_autocmd("BufWritePost", {
+  group = group,
   pattern = vim.fn.stdpath("config") .. "/**/*.lua",
   callback = function()
     local ok, err = pcall(function()

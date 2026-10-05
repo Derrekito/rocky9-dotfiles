@@ -39,6 +39,7 @@ local function rewrap(client)
   end
   client.__compat_supports_method = true
 end
+M._rewrap = rewrap
 
 function M.setup()
   vim.api.nvim_create_autocmd("LspAttach", {

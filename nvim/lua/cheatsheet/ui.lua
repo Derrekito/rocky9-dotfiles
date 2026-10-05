@@ -14,10 +14,15 @@ function M.create_picker(title, entries, on_select)
       results = entries,
     }),
     sorter = conf.generic_sorter({}),
-    attach_mappings = function(prompt_bufnr, map)
+    attach_mappings = function(prompt_bufnr)
       actions.select_default:replace(function()
-        actions.close(prompt_bufnr)
+        -- Read the selection before closing; nil when the prompt matches
+        -- nothing, and <CR> then just closes.
         local selection = action_state.get_selected_entry()
+        actions.close(prompt_bufnr)
+        if not selection then
+          return
+        end
         on_select(selection.value)
       end)
       return true

@@ -5,15 +5,21 @@ vim.g.mapleader = " "
 -- Prevent <CR> from doing anything unexpected globally
 vim.keymap.set("n", "<CR>", "<nop>", { desc = "Disable default <CR>" })
 
+-- Every autocmd here lives in this group. config.options re-requires this
+-- file when you save a config file; clear = true drops the previous copies
+-- so they don't stack up with each reload.
+local group = vim.api.nvim_create_augroup("UserKeymaps", { clear = true })
+
 vim.api.nvim_create_autocmd("FileType", {
+  group = group,
   pattern = "help",
   callback = function()
-    print("Help filetype detected!")
     vim.keymap.set("n", "<CR>", "<C-]>", { buffer = true, desc = "Jump to tag under cursor" })
   end,
 })
 
 vim.api.nvim_create_autocmd("FileType", {
+  group = group,
   pattern = "qf",
   callback = function()
     vim.keymap.set("n", "<CR>", "<CR>", { buffer = true, desc = "Jump to quickfix item" })
@@ -21,8 +27,9 @@ vim.api.nvim_create_autocmd("FileType", {
 })
 
 
--- Increase font size
-setkey("n", "<leader>+", ":hi! Normal guifont+=1<CR>")
+-- Increase font size (GUI frontends such as Neovide; a terminal ignores
+-- 'guifont').
+setkey("n", "<leader>+", function() require("config.guifont").increase(1) end, { desc = "Increase GUI font size" })
 
 -- In visual mode, move the selected block of text one line up or down and
 -- reselect the block.
@@ -68,8 +75,10 @@ setkey({ "n", "v" }, "<leader>y", [["+y]])
 -- from Vim to external applications.
 setkey("n", "<leader>Y", [["+Y]])
 
--- Map <leader>d in normal and visual modes to delete without affecting the clipboard.
-setkey({ "n", "v" }, "<leader>d", [["_d]])
+-- Map <leader>D in normal and visual modes to delete without affecting the
+-- clipboard. Not <leader>d: that is the prefix of the diagnostic/dap maps, and
+-- a mapping that is also a prefix makes every use wait out 'timeoutlen'.
+setkey({ "n", "v" }, "<leader>D", [["_d]])
 
 -- Disable the default functionality of 'Q' in normal mode.
 setkey("n", "Q", "<nop>")
@@ -101,31 +110,36 @@ setkey("n", "<leader>x", "<cmd>!chmod +x %<CR>", { silent = true })
 --    vim.cmd("so")
 --end)
 
-local function setNetrwKeymap()
-  if vim.bo.filetype == "netrw" then
-    vim.keymap.set("n", "<leader><leader>", ":TypeAnim<CR>", { buffer = true })
-  else
-    -- source file
-    vim.keymap.set("n", "<leader><leader>", function()
-      vim.cmd("so")
-    end)
+-- <leader><leader> sources the current file; in netrw it plays TypeAnim
+-- instead (buffer-local, so it only shadows the global map there). Only Lua
+-- and Vim files: :source on anything else runs it as Vimscript (a README's
+-- `# title` line is an E488).
+setkey("n", "<leader><leader>", function()
+  if vim.bo.filetype ~= "lua" and vim.bo.filetype ~= "vim" then
+    vim.notify("Not a Lua/Vim file; nothing to source", vim.log.levels.WARN)
+    return
   end
-end
-
+  vim.cmd("so")
+end, { desc = "Source current file" })
 vim.api.nvim_create_autocmd("FileType", {
+  group = group,
   pattern = "netrw",
-  callback = setNetrwKeymap
-})
-
-vim.api.nvim_create_autocmd("BufLeave", {
-  pattern = "*",
-  callback = setNetrwKeymap
+  callback = function()
+    vim.keymap.set("n", "<leader><leader>", "<cmd>TypeAnim<CR>", { buffer = true })
+  end,
 })
 -- Select All
 setkey("n", "<C-a>", "gg<S-v>G")
 
+-- Toggle soft wrap for this window (display only; the text isn't changed).
+-- Hard-wrapping text to 'textwidth' is gq: gqip for a paragraph.
+setkey("n", "<leader>w", function()
+  vim.wo.wrap = not vim.wo.wrap
+  vim.notify("wrap " .. (vim.wo.wrap and "on" or "off"))
+end, { desc = "Toggle soft wrap" })
+
 -- Split Window
-setkey("n", "<leader>-", ":split<Return>", opts)
+setkey("n", "<leader>-", ":split<Return>")
 
 -- Vertical split pinned to 81 columns (one past colorcolumn=80). The count
 -- prefix sets the *new* window's width; winfixwidth pins it so later splits and
@@ -137,7 +151,7 @@ setkey("n", "<leader>|", function()
 end, { desc = "81-col pinned vsplit" })
 
 -- Plain, unpinned vertical split (previous <leader>| behavior).
-setkey("n", "<leader>\\", ":vsplit<Return>", opts)
+setkey("n", "<leader>\\", ":vsplit<Return>")
 
 -- Move to Window
 setkey("n", "sh", "<C-w>h")
@@ -161,9 +175,8 @@ setkey("n", "<C-right>", "<C-w>>")
 setkey("n", "<C-up>", "<C-w>+")
 setkey("n", "<C-down>", "<C-w>-")
 
--- Set highlight on search, but clear on pressing <esc> in normal mode
-vim.opt.hlsearch = true
-setkey("n", "<esc>", ":nohlsearch<CR>")
+-- Clear search highlighting ('hlsearch' is on, see config.options).
+setkey("n", "<esc>", "<cmd>nohlsearch<CR>")
 
 -- Diagnostic Keymaps
 -- vim.diagnostic.goto_next/goto_prev were deprecated in 0.11 for vim.diagnostic.jump.
@@ -184,24 +197,9 @@ setkey("n", "<leader>dq", function()
   vim.cmd("copen")
 end, { desc = "Diagnostics -> quickfix + open" })
 
--- Reload buffer to re-attach LSP without erroring on / discarding unsaved
--- changes. Bare `:edit` raises E37 when the buffer is modified.
-local function reload_for_lsp()
-  if vim.bo.modified then
-    vim.notify("LSP restart: buffer modified, skipping reload (save to re-attach)", vim.log.levels.INFO)
-    return
-  end
-  vim.cmd("edit")
-end
-
--- vim.lsp.stop_client works on every Neovim version. The client:stop() method
--- form is 0.11+; on 0.8 stop is a plain function, and calling it as a method
--- passes the client in as the `force` flag.
+-- Same as :LspRestart (lua/lsp-autorestart.lua).
 setkey("n", "<leader>lr", function()
-  for _, client in ipairs(vim.lsp.get_clients()) do
-    vim.lsp.stop_client(client.id)
-  end
-  vim.defer_fn(reload_for_lsp, 500)
+  require("lsp-autorestart").restart()
 end, { desc = "Restart all LSP clients" })
 
 setkey("n", "<leader>lR", function()
@@ -210,10 +208,7 @@ setkey("n", "<leader>lR", function()
       package.loaded[mod] = nil
     end
   end
-  for _, client in ipairs(vim.lsp.get_clients()) do
-    vim.lsp.stop_client(client.id)
-  end
-  vim.defer_fn(reload_for_lsp, 500)
+  require("lsp-autorestart").restart()
   print("Reloaded diagnostic-picker + restarted LSP")
 end, { desc = "Reload diagnostic-picker and restart LSP" })
 
@@ -232,13 +227,7 @@ end, { desc = "Reload diagnostic-picker and restart LSP" })
 --            sessions keep wl-paste (direct, no prompt); SSH sessions route
 --            through OSC 52 paste-back. Requires update-environment in
 --            tmux.conf to keep SSH_TTY/SSH_CONNECTION fresh across reattach.
--- Neovim 0.10+ ships vim.ui.clipboard.osc52; on 0.8 use lua/osc52.lua, which
--- copies the same way. Its paste returns the last copy from this Neovim, since
--- 0.8 can't read the terminal's clipboard.
-local has_builtin_osc52, osc52 = pcall(require, 'vim.ui.clipboard.osc52')
-if not has_builtin_osc52 then
-  osc52 = require('osc52')
-end
+local osc52 = require('vim.ui.clipboard.osc52')
 local clipboard = {
   name = 'OSC 52 (copy) + context-aware paste',
   copy = {
@@ -251,24 +240,13 @@ if vim.env.SSH_TTY or vim.env.SSH_CONNECTION then
     ['+'] = osc52.paste('+'),
     ['*'] = osc52.paste('*'),
   }
-elseif vim.fn.executable('wl-paste') == 1 then
+else
   -- Same command arrays Nvim's built-in wl-copy provider would have
   -- auto-detected; spelled out here because setting g:clipboard.copy
   -- disables that auto-detection entirely, including for paste.
   clipboard.paste = {
     ['+'] = { 'wl-paste', '--no-newline' },
     ['*'] = { 'wl-paste', '--no-newline', '--primary' },
-  }
-elseif vim.fn.executable('xclip') == 1 then
-  -- X11 session (or no wl-clipboard installed): read with xclip instead.
-  clipboard.paste = {
-    ['+'] = { 'xclip', '-o', '-selection', 'clipboard' },
-    ['*'] = { 'xclip', '-o', '-selection', 'primary' },
-  }
-else
-  clipboard.paste = {
-    ['+'] = osc52.paste('+'),
-    ['*'] = osc52.paste('*'),
   }
 end
 -- vim.g.clipboard reads back a copy, not a live reference, so build the

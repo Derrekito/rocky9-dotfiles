@@ -1,19 +1,33 @@
 -- Markdown helpers used by after/ftplugin/markdown.lua.
 local M = {}
 
--- Flip markdown between rendered mode (render-markdown decorations) and
--- source mode (plain text, raw syntax visible). render-markdown v3.3.1, the
--- last release that runs on Neovim 0.8, only has a global switch, so this
--- applies to every markdown buffer at once.
-function M.toggle_source()
+-- Flip a markdown buffer between rendered mode (render-markdown decorations
+-- plus snacks inline images) and source mode (plain text, raw syntax visible).
+function M.toggle_source(buf)
+  buf = (buf == nil or buf == 0) and vim.api.nvim_get_current_buf() or buf
+  local source = not vim.b[buf].markdown_source_mode
+  vim.b[buf].markdown_source_mode = source
+
   local ok, rm = pcall(require, "render-markdown")
-  if not ok then
-    return
+  if ok then
+    vim.api.nvim_buf_call(buf, source and rm.buf_disable or rm.buf_enable)
   end
-  rm.toggle()
-  vim.g.markdown_source_mode = not vim.g.markdown_source_mode
-  vim.notify("Markdown: " .. (vim.g.markdown_source_mode and "source" or "rendered"), vim.log.levels.INFO)
-  return vim.g.markdown_source_mode
+
+  -- plugins/snacks.lua makes snacks' image scan return nothing for a
+  -- source-mode buffer; this just makes the change show up right away.
+  if package.loaded["snacks.image"] then
+    if source then
+      Snacks.image.placement.clean(buf)
+    else
+      pcall(vim.api.nvim_exec_autocmds, "WinScrolled", {
+        group = "snacks.image.inline." .. buf,
+        buffer = buf,
+      })
+    end
+  end
+
+  vim.notify("Markdown: " .. (source and "source" or "rendered"), vim.log.levels.INFO)
+  return source
 end
 
 -- Wrap the visual selection (charwise) in `left`..`right`. Returns the
@@ -95,7 +109,7 @@ function M.jump_heading(dir)
 end
 
 -- mmdc's stock "dark" theme is black boxes on grey; theme diagrams from the
--- rose-pine moon palette instead (slide exports).
+-- rose-pine moon palette instead (inline previews and slide exports).
 -- Written to a cache file because mmdc only takes theme variables via
 -- -c <json>.
 function M.mermaid_config()

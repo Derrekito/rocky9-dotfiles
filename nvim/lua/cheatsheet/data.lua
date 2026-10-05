@@ -114,7 +114,7 @@ M.sections = {
       "x: <leader>p          → Replace selection with yanked text",
       "v: <leader>y          → Copy to system clipboard",
       "n: <leader>Y          → Yank to end of line to clipboard",
-      "v: <leader>d          → Delete without affecting clipboard",
+      "v: <leader>D          → Delete without affecting clipboard",
     },
   },
   {
@@ -223,10 +223,10 @@ M.sections = {
       "i: <C-b>              → Scroll docs up",
       "i: <C-f>              → Scroll docs down",
       "i: <C-Space>          → Trigger completion",
-      "i: <C-e>              → Abort completion",
-      "i: <CR>               → Confirm completion",
-      "i: <Tab>              → Select next item",
-      "i: <S-Tab>            → Select previous item",
+      "i: <C-e>              → Close menu (then <CR> is a plain newline)",
+      "i: <CR> / <C-y>       → Accept the highlighted item",
+      "i: <Tab>              → Next item; in a snippet, next placeholder",
+      "i: <S-Tab>            → Previous item; in a snippet, previous placeholder",
     },
   },
   {
@@ -338,7 +338,7 @@ M.sections = {
     items = {
       "n: <leader>db         → Toggle breakpoint",
       "n: <leader>dc         → Continue",
-      "n: <leader>ds         → Step over",
+      "n: <leader>dO         → Step over",
       "n: <leader>di         → Step into",
       "n: <leader>do         → Step out",
       "n: <leader>dt         → DAP UI: Toggle",
@@ -385,22 +385,24 @@ M.sections = {
     category = "Trouble (Normal Mode)",
     items = {
       "n: <leader>tt         → Toggle diagnostics",
-      "n: <leader>[d         → Next diagnostic",
-      "n: ]d                 → Previous diagnostic",
+      "n: <leader>tn         → Next item in Trouble list",
+      "n: <leader>tp         → Previous item in Trouble list",
     },
   },
   {
     category = "Obsidian (in vaults, Normal Mode)",
     items = {
-      "n: gf                 → Follow link",
+      "n: gf / <CR>          → Follow link (<CR> on a checkbox toggles it)",
+      "n: ]o / [o            → Next / previous link",
       "n: <leader>ch         → Toggle checkbox",
+      "   :Obsidian backlinks / links / quick_switch / search / tags / rename / paste_img",
     },
   },
   {
     category = "TypeAnim (Normal Mode)",
     items = {
-      "n: <Space>            → Toggle animation (netrw file selection)",
-      "n: <C-C>              → Kill animation (netrw file selection)",
+      "n: <leader>ta         → Toggle animation",
+      "n: <C-C>              → Kill animation",
     },
   },
   {
@@ -434,9 +436,17 @@ M.sections = {
     },
   },
   {
+    category = "Wrapping",
+    items = {
+      "n: <leader>w          → Toggle soft wrap (display only)",
+      "n: gqip / gqq / v gq  → Hard-wrap paragraph / line / selection to textwidth",
+      "                        Commit messages hard-wrap at 72 as you type",
+    },
+  },
+  {
     category = "Markdown",
     items = {
-      "n: <leader>mt         → Toggle rendered / source view (all markdown buffers)",
+      "n: <leader>mt         → Toggle rendered / source view",
       "n: <leader>mG         → Link graph (:MarkdownGraph [hops], ! = whole vault)",
       "n: <leader>mp         → Present as slides (--- or #/## split; n/p, e edit, q quit)",
       "n: <leader>me         → Export window: PDF doc / DOCX / PDF slides, options, command preview",
@@ -450,9 +460,11 @@ M.sections = {
       "n/v: <leader>mc       → Inline code word / selection",
       "n/v: <leader>m~       → Strikethrough word / selection",
       "v: <leader>ml         → Link selection, cursor in the URL",
+      "n: <leader>mI         → Paste clipboard image (saved to attachments/, link inserted)",
       "i: <CR>               → Continue list (empty item ends it)",
       "i: <C-t> / <C-d>      → Indent / outdent list item",
       "n: gN                 → Renumber numbered list",
+      "                        ```mermaid blocks and $math$ render as images",
     },
   },
   {

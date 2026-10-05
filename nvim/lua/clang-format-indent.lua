@@ -20,6 +20,7 @@ local function parse_config(lines)
   end
   return cfg
 end
+M._parse_config = parse_config
 
 function M.apply(bufnr)
   bufnr = bufnr or vim.api.nvim_get_current_buf()

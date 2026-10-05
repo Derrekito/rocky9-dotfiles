@@ -1,12 +1,14 @@
 # rocky9-dotfiles
 
-My development setup for stock Rocky Linux 9: Neovim, tmux, bash, and git,
-adjusted for the older versions Rocky 9 ships (Neovim 0.8 from EPEL, tmux
-3.2a). It's built to go on a fresh VM with two commands and no GitHub login.
+My development setup for stock Rocky Linux 9: Neovim, tmux, bash, and git.
+Neovim is the current release build (installed in your home directory, not
+EPEL's 0.8) running the same config as my main machines; tmux and the rest are
+adjusted for what Rocky 9 ships (tmux 3.2a). It's built to go on a fresh VM with
+two commands and no GitHub login.
 
 | Directory | What | Installed to |
 |-----------|------|--------------|
-| `nvim/` | Neovim 0.8 config, plugins pinned in `plugins.lock` ([details](nvim/README.md)) | `~/.config/nvim` (symlink) |
+| `nvim/` | Neovim 0.12 config, plugins pinned in `plugins.lock`, no plugin manager ([details](nvim/README.md)) | `~/.config/nvim` (symlink) |
 | `tmux/` | tmux 3.2a config, plugins pinned in `plugins.lock`, no TPM ([details](tmux/README.md)) | `~/.config/tmux` (symlink) |
 | `bash/bashrc` | env, aliases, vi mode, fzf, tmux and venv helpers | sourced from `~/.bashrc` |
 | `bash/prompt.bash` | two-line powerline prompt with git status, in plain bash | sourced by `bashrc` |
@@ -15,10 +17,11 @@ adjusted for the older versions Rocky 9 ships (Neovim 0.8 from EPEL, tmux
 | `clang/clang-format` | LLVM style, Allman braces | `~/.clang-format` (symlink) |
 | `hunk/config.toml` | Rosé Pine Moon theme for [hunk](https://github.com/modem-dev/hunk) | `~/.config/hunk/config.toml` (symlink) |
 | `bin/` | `tmux-attach`, `tmux-quad` | on `PATH` via `bashrc` |
-| `texmf/` | RosePineMoon Beamer theme parts, for nvim's `:MarkdownExport slides` | `~/texmf/tex/latex/beamer/` (symlink) |
+| `texmf/` | RosePineMoon Beamer theme parts, for nvim's `:MarkdownExport slides` | `~/texmf/tex/latex/beamer/RosePineMoon/` (one symlink per file) |
 
-`install.sh` also installs hunk itself: the pinned release binary, checked
-against its SHA256, into `~/.local/bin/hunk`.
+`install.sh` also installs three release binaries into `~/.local/bin`, each
+pinned and checked against its SHA256: Neovim 0.12.5, the tree-sitter CLI
+(0.25.10, which builds Neovim's parsers), and [hunk](https://github.com/modem-dev/hunk).
 
 ## Install
 
@@ -27,8 +30,8 @@ On the VM:
 ```bash
 sudo dnf install -y git
 git clone https://github.com/Derrekito/rocky9-dotfiles ~/rocky9-dotfiles
-sudo ~/rocky9-dotfiles/provision/packages.sh   # dnf: EPEL, neovim, tmux, toolchain, node 22
-~/rocky9-dotfiles/install.sh                   # links, plugins, parsers
+sudo ~/rocky9-dotfiles/provision/packages.sh   # dnf: EPEL, tmux, toolchain, node 22
+~/rocky9-dotfiles/install.sh                   # links, Neovim, plugins, parsers
 ```
 
 Optional: `sudo ~/rocky9-dotfiles/provision/export-tools.sh` adds TeX Live and
@@ -50,7 +53,7 @@ A work machine whose dnf only sees a company mirror may lack some of those
 packages, have them under other repo names, or carry different versions. Run
 `./doctor.sh` first (no root needed, installs nothing): it lists the enabled
 repos and where they're served from, then checks every package `packages.sh`
-installs (`--export` adds `export-tools.sh`'s) and the Neovim, tmux and Node
+installs (`--export` adds `export-tools.sh`'s) and the tmux and Node
 versions the pinned config assumes. It exits non-zero if something
 `packages.sh` needs isn't available, so you know before the install stops
 halfway.
@@ -130,5 +133,6 @@ Nothing machine-specific or private is committed. Instead:
 `.github/workflows/ci.yml` runs `packages.sh` and `install.sh` (twice, to
 check it's idempotent) in a `rockylinux:9` container, then `test/smoke.sh`.
 The smoke test starts nvim headless and fails on any startup error, requires
-the main plugin modules, loads `tmux.conf` into a scratch server, and sources
-the bash config.
+the main plugin modules, runs the markdown checks and Neovim's own test suite
+(`nvim/tests`), loads `tmux.conf` into a scratch server, and sources the bash
+config.

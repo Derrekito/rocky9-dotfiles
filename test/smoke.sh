@@ -3,6 +3,9 @@
 # the bash config sources cleanly. Run as the user install.sh ran for.
 set -uo pipefail
 status=0
+# The Neovim install.sh pins lives in ~/.local/bin; test that one, whatever
+# PATH the caller has (EPEL's 0.8 may still be in /usr/bin).
+export PATH="$HOME/.local/bin:$PATH"
 fail() { echo "FAIL: $*" >&2; status=1; }
 
 echo "--- nvim $(nvim --version | head -1)"
@@ -17,7 +20,8 @@ if grep -Eq 'E[0-9]+:|[Ee]rror|failed to load|stack traceback' <<<"$out"; then
 fi
 
 # Each plugin's module actually loads.
-for mod in telescope cmp lspconfig mason nvim-treesitter conform lint aerial trouble harpoon; do
+for mod in telescope cmp lspconfig mason tree-sitter-manager conform lint aerial trouble harpoon \
+  render-markdown snacks obsidian; do
   nvim --headless -c "lua local ok, e = pcall(require, '$mod'); if not ok then io.stderr:write(e) vim.cmd('cq') end" -c 'qa!' 2>&1 ||
     fail "nvim: require('$mod')"
 done
@@ -25,7 +29,7 @@ done
 echo "--- go"
 go version || fail "go"
 dlv version 2>/dev/null | head -1 || fail "dlv"
-ts="${XDG_DATA_HOME:-$HOME/.local/share}/nvim/site/pack/plugins/start/nvim-treesitter/parser"
+ts="${XDG_DATA_HOME:-$HOME/.local/share}/nvim/site/parser" # tree-sitter-manager's parser_dir
 for p in go gomod gosum gowork; do
   [ -f "$ts/$p.so" ] || fail "treesitter parser: $p"
 done
@@ -37,8 +41,8 @@ if [ -x "$gopls" ]; then
   printf 'module example.com/smoke\n\ngo 1.21\n' >"$tmp/go.mod"
   printf 'package main\n\nimport "fmt"\n\nfunc main() { fmt.Println("hi") }\n' >"$tmp/main.go"
   out=$(cd "$tmp" && nvim --headless main.go -c 'lua
-    vim.wait(20000, function() return #vim.lsp.get_active_clients({ name = "gopls" }) > 0 end, 200)
-    local ok = #vim.lsp.get_active_clients({ name = "gopls" }) > 0
+    vim.wait(20000, function() return #vim.lsp.get_clients({ name = "gopls" }) > 0 end, 200)
+    local ok = #vim.lsp.get_clients({ name = "gopls" }) > 0
     io.stdout:write(ok and "\ngopls attached\n" or "\ngopls did not attach\n")
     vim.cmd(ok and "qa!" or "cq")' 2>&1)
   grep -o 'gopls [a-z ]*' <<<"$out"
@@ -60,6 +64,14 @@ rc=$?
 # Results can share a line with other headless output; put each on its own.
 sed -E 's/(ok   |FAIL |skip )/\n\1/g' <<<"$out" | grep -E '^(ok  |FAIL|skip)'
 [ $rc -eq 0 ] || { echo "$out" | grep -v -E '^(ok  |skip)' | tail -20; fail "markdown"; }
+
+echo "--- nvim test suite (nvim/tests: unit + smoke specs, shared with Derrekito/nvim)"
+if ! "$repo_test/../nvim/tests/run.sh" >/tmp/nvim-tests.log 2>&1; then
+  sed 's/\x1b\[[0-9;]*m//g' /tmp/nvim-tests.log | grep -E -A6 '^(Fail|Errors?)[[:space:]]+\|\||unexpected error' | head -60
+  fail "nvim test suite (full log: /tmp/nvim-tests.log)"
+else
+  echo "all specs passed"
+fi
 
 echo "--- devdocs.nvim"
 # :DevdocsUpdate shells out to `python scripts/convert.py`; convert a tiny

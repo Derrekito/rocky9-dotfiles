@@ -75,7 +75,7 @@ hosts=$(dnf -q repoinfo --enabled 2>/dev/null | awk '/^Repo-baseurl|^Repo-mirror
 
 has_repo() { grep -q -i -E "$1" <<<"$repolist"; }
 if has_repo '^epel|[^a-z]epel'; then ok "an EPEL repo is enabled"
-else warn "no repo named like EPEL: packages.sh installs epel-release and gets neovim, ripgrep, fzf, cppcheck, pandoc, chromium from it"; fi
+else warn "no repo named like EPEL: packages.sh installs epel-release and gets ripgrep, fzf, cppcheck, pandoc, chromium from it"; fi
 if has_repo 'crb|codeready'; then ok "CodeReady Builder (crb) is enabled"
 else warn "no CRB/CodeReady repo: packages.sh runs 'dnf config-manager --set-enabled crb', which fails if no such repo exists"; fi
 
@@ -120,16 +120,25 @@ check_list "packages.sh" "${base[@]}"
 
 # Versions the pinned config is built around (installed, else available).
 installed_ver() { rpm -q "$1" >/dev/null 2>&1 && rpm -q --qf '%{VERSION}' "$1" | head -1; }
-nv=$(installed_ver neovim); nv=${nv:-${avail_ver[neovim]:-}}
-if [ -n "$nv" ]; then
-  if ! version_ge "$nv" 0.8; then
-    bad "neovim $nv is older than 0.8, the oldest this config supports"
-  elif version_ge "$nv" 0.9; then
-    warn "neovim $nv: newer than the 0.8 these pins target. It should still work (compat.lua does nothing on newer versions), but with 0.11+ the main Derrekito/nvim config fits better"
-  fi
-fi
 tv=$(installed_ver tmux); tv=${tv:-${avail_ver[tmux]:-}}
 [ -n "$tv" ] && [ "$tv" != "3.2a" ] && warn "tmux $tv: tmux.conf targets 3.2a; check tmux/README.md if options error"
+
+# ---------------------------------------------------------------------------
+section "Neovim and tree-sitter (release binaries from GitHub, not dnf)"
+# install.sh downloads pinned official builds into your home directory.
+case "$(uname -m)" in
+  x86_64|aarch64) ok "$(uname -m): Neovim and tree-sitter publish builds for it" ;;
+  *) bad "$(uname -m): no Neovim/tree-sitter release build; install.sh can't install them" ;;
+esac
+glibc=$(ldd --version 2>/dev/null | head -1 | grep -o -E '[0-9]+\.[0-9]+$')
+if [ -n "$glibc" ] && version_ge "$glibc" 2.34; then
+  ok "glibc $glibc: the pinned tree-sitter 0.25.10 runs on 2.34+ (0.26+ would need 2.35)"
+elif [ -n "$glibc" ]; then
+  bad "glibc $glibc: older than EL9's 2.34; the pinned tree-sitter CLI won't run"
+fi
+if rpm -q neovim >/dev/null 2>&1; then
+  note "EPEL's neovim $(installed_ver neovim) is also installed; ~/.local/bin/nvim comes first on PATH"
+fi
 
 # ---------------------------------------------------------------------------
 section "Node.js (packages.sh enables the nodejs:22 module stream)"
@@ -176,6 +185,6 @@ else
   echo "${red}$problems problem(s).${off} packages.sh (or export-tools.sh) stops at the first missing package."
   echo "Missing packages need another source: ask for them on the mirror, or install them outside dnf."
   has_repo '^epel|[^a-z]epel' ||
-    echo "On stock Rocky/RHEL 9, neovim, ripgrep, fzf, cppcheck and python3-beautifulsoup4 (and the optional pandoc) come from EPEL; a mirror of EPEL 9 would cover them."
+    echo "On stock Rocky/RHEL 9, ripgrep, fzf, cppcheck and python3-beautifulsoup4 (and the optional pandoc) come from EPEL; a mirror of EPEL 9 would cover them."
 fi
 exit $(( problems > 0 ))

@@ -1,33 +1,51 @@
 -- ~/.config/nvim/after/ftplugin/pandoc-latex.lua
-local ext = vim.fn.expand("%:e")
-if ext == "latex" then
-  vim.bo.filetype = "pandoc-latex"
-  -- Load tex syntax as a base
-  vim.api.nvim_buf_call(0, function()
-    vim.cmd("syntax enable")
-    vim.cmd("set syntax=tex")
-  end)
-  -- Clear tex math zones
-  vim.api.nvim_buf_call(0, function()
-    vim.cmd("syntax clear texMathZoneX")
-    vim.cmd("syntax clear texMathZoneY")
-  end)
-  -- Define custom highlight groups with Rosé Pine Moon colors (buffer-local)
-  local p = require("rose-pine-moon").palette
-  vim.api.nvim_set_hl(0, "PandocVariable", { fg = p.gold })                                  -- Gold for $title$
-  vim.api.nvim_set_hl(0, "PandocFunction", { fg = p.foam })                                  -- Foam for ${whatever()}
-  vim.api.nvim_set_hl(0, "PandocConditional", { fg = p.iris })                               -- Iris for $if(foo)$
-  vim.api.nvim_set_hl(0, "PandocLoop", { fg = p.pine })                                      -- Pine for $for(bar)$
-  vim.api.nvim_set_hl(0, "PandocDelimiter", { fg = p.love })                                 -- Love for $ (was mislabeled "Rose")
-  -- Define Pandoc macro highlighting (buffer-local)
-  vim.fn.matchadd("PandocVariable", [[\$[a-zA-Z0-9._-]\+\$]], 10, -1, { buffer = 0 })        -- $title$
-  vim.fn.matchadd("PandocFunction", [[\${[a-zA-Z0-9._-]\+([^)]*)}]], 10, -1, { buffer = 0 }) -- ${whatever()}
-  vim.fn.matchadd("PandocConditional", [[\$if([a-zA-Z0-9._-]\+)\$]], 10, -1, { buffer = 0 }) -- $if(foo)$
-  vim.fn.matchadd("PandocConditional", [[\$else\$]], 10, -1, { buffer = 0 })                 -- $else$
-  vim.fn.matchadd("PandocConditional", [[\$endif\$]], 10, -1, { buffer = 0 })                -- $endif$
-  vim.fn.matchadd("PandocLoop", [[\$for([a-zA-Z0-9._-]\+)\$]], 10, -1, { buffer = 0 })       -- $for(bar)$
-  vim.fn.matchadd("PandocLoop", [[\$endfor\$]], 10, -1, { buffer = 0 })                      -- $endfor$
-  vim.fn.matchadd("PandocDelimiter", [[\$]], 10, -1, { buffer = 0 })                         -- Standalone $
-  -- Clear gutter signs (like "I")
-  vim.fn.sign_unplace("*", { buffer = vim.api.nvim_get_current_buf() })
+-- Pandoc LaTeX templates (*.latex, detected in lua/config/options.lua).
+-- syntax/pandoc-latex.vim supplies TeX syntax as a base; this adds
+-- highlighting for pandoc's $variable$ template language on top.
+
+-- Rose Pine Moon colors. Highlight groups are global; the matches below are
+-- what scope them to template buffers.
+local p = require("rose-pine-moon").palette
+vim.api.nvim_set_hl(0, "PandocVariable", { fg = p.gold })    -- $title$
+vim.api.nvim_set_hl(0, "PandocFunction", { fg = p.foam })    -- ${whatever()}
+vim.api.nvim_set_hl(0, "PandocConditional", { fg = p.iris }) -- $if(foo)$
+vim.api.nvim_set_hl(0, "PandocLoop", { fg = p.pine })        -- $for(bar)$
+vim.api.nvim_set_hl(0, "PandocDelimiter", { fg = p.love })   -- $
+
+-- matchadd() is per *window*, not per buffer, so matches added here would
+-- follow the window to whatever buffer it shows next. One global
+-- BufWinEnter handler (the current window is always the one that just got a
+-- buffer) adds them for templates and removes them for anything else.
+local patterns = {
+  { "PandocVariable", [[\$[a-zA-Z0-9._-]\+\$]] },
+  { "PandocFunction", [[\${[a-zA-Z0-9._-]\+([^)]*)}]] },
+  { "PandocConditional", [[\$if([a-zA-Z0-9._-]\+)\$]] },
+  { "PandocConditional", [[\$else\$]] },
+  { "PandocConditional", [[\$endif\$]] },
+  { "PandocLoop", [[\$for([a-zA-Z0-9._-]\+)\$]] },
+  { "PandocLoop", [[\$endfor\$]] },
+  { "PandocDelimiter", [[\$]] },
+}
+
+local function sync_matches()
+  local want = vim.bo.filetype == "pandoc-latex"
+  local ids = vim.w.pandoc_latex_matches
+  if want and not ids then
+    ids = {}
+    for _, m in ipairs(patterns) do
+      table.insert(ids, vim.fn.matchadd(m[1], m[2], 10))
+    end
+    vim.w.pandoc_latex_matches = ids
+  elseif not want and ids then
+    for _, id in ipairs(ids) do
+      pcall(vim.fn.matchdelete, id)
+    end
+    vim.w.pandoc_latex_matches = nil
+  end
 end
+
+vim.api.nvim_create_autocmd("BufWinEnter", {
+  group = vim.api.nvim_create_augroup("PandocLatexMatches", { clear = true }),
+  callback = sync_matches,
+})
+sync_matches()

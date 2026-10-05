@@ -3,36 +3,20 @@
 -- over any plugin that configures vim.diagnostic itself.
 
 local sev = vim.diagnostic.severity
-local sign_text = {
-  [sev.ERROR] = "✘",
-  [sev.WARN] = "⚠",
-  [sev.HINT] = "💡",
-  [sev.INFO] = "ℹ",
-}
 vim.diagnostic.config({
   virtual_text = false,
-  signs = { text = sign_text },
+  signs = {
+    text = {
+      [sev.ERROR] = "✘",
+      [sev.WARN] = "⚠",
+      [sev.HINT] = "💡",
+      [sev.INFO] = "ℹ",
+    },
+  },
   underline = true,
   update_in_insert = false,
   severity_sort = true,
 })
--- Before 0.10, diagnostic sign icons come from :sign-define, not signs.text.
-if vim.fn.has("nvim-0.10") == 0 then
-  local names = { [sev.ERROR] = "Error", [sev.WARN] = "Warn", [sev.HINT] = "Hint", [sev.INFO] = "Info" }
-  for s, name in pairs(names) do
-    local hl = "DiagnosticSign" .. name
-    vim.fn.sign_define(hl, { text = sign_text[s], texthl = hl, numhl = "" })
-  end
-end
-
--- Before 0.11, vim.lsp.buf.hover() and signature_help() take no options, so the
--- wide, wrapping, rounded floats used in the LspAttach keymaps below are set
--- on the handlers instead.
-if vim.fn.has("nvim-0.11") == 0 then
-  local float = { border = "rounded", width = 90, wrap = true }
-  vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, float)
-  vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, float)
-end
 
 local augroup = vim.api.nvim_create_augroup
 local UserAutoCommands = augroup('UserAutoCommands', {})
@@ -93,8 +77,9 @@ autocmd('LspAttach', {
         vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts)
         vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, opts)
         vim.keymap.set("n", "<leader>ws", vim.lsp.buf.workspace_symbol, opts)
+        -- Signature help is insert-mode only: normal-mode <leader>k stays the
+        -- global location-list `lnext` (config.keymaps) in LSP buffers too.
         vim.keymap.set("i", "<C-h>", function() vim.lsp.buf.signature_help(float) end, opts)
-        vim.keymap.set("n", "<leader>k", function() vim.lsp.buf.signature_help(float) end, opts)
         -- Browse symbols: current file (ds) vs. whole project (dS).
         vim.keymap.set("n", "<leader>ds", "<cmd>Telescope lsp_document_symbols<cr>", opts)
         vim.keymap.set("n", "<leader>dS", "<cmd>Telescope lsp_dynamic_workspace_symbols<cr>", opts)

@@ -1,29 +1,40 @@
--- Treesitter parsers + highlighting via nvim-treesitter v0.8.5.2, the last
--- release supporting Neovim 0.8. (tree-sitter-manager.nvim needs a newer
--- Neovim.) Missing parsers are downloaded and compiled on first launch, which
--- needs a C/C++ compiler (gcc, gcc-c++) and git or curl + tar.
-require("nvim-treesitter.configs").setup({
-  ensure_installed = {
-    "javascript", "typescript", "c", "cpp", "lua", "rust",
-    "vim", "help", "query", "latex", "markdown", -- "help" is vimdoc's pre-0.9 name
-    "markdown_inline", "make", "cuda",
-    "go", "gomod", "gosum", "gowork",
-    -- Common fenced-code languages in markdown (yaml also covers
-    -- frontmatter); without a parser a fence is one flat color. (sql would
-    -- need the tree-sitter CLI to generate at this nvim-treesitter version.)
-    "python", "yaml", "toml", "html", "css", "diff", "regex",
-    "mermaid", "json", "bash",
-  },
-  -- Headless (install.sh, CI): compile parsers before exiting, so they exist
-  -- before the first real launch. Interactive: compile in the background.
-  sync_install = #vim.api.nvim_list_uis() == 0,
-  highlight = {
-    enable = true,
-    -- Disable large file highlighting
-    disable = function(_, buf)
-      local max_filesize = 100 * 1024 -- 100 KB
-      local ok, stats = pcall(vim.loop.fs_stat, vim.api.nvim_buf_get_name(buf))
-      return ok and stats ~= nil and stats.size > max_filesize
+return {
+  {
+    "romus204/tree-sitter-manager.nvim",
+    config = function()
+      require("tree-sitter-manager").setup({
+        -- Auto-install parsers for these languages
+        ensure_installed = {
+          "javascript", "typescript", "c", "cpp", "lua", "rust",
+          "vim", "vimdoc", "query", "latex", "markdown",
+          "markdown_inline", "make", "cuda",
+          -- Common fenced-code languages in markdown (yaml also covers
+          -- frontmatter); without a parser a fence is one flat color.
+          "python", "yaml", "toml", "html", "css", "diff", "regex", "sql",
+          "mermaid", "json", "bash",
+          "go", "gomod", "gosum", "gowork"
+        },
+      })
+
+      -- Enable tree-sitter highlighting
+      vim.api.nvim_create_autocmd("FileType", {
+        group = vim.api.nvim_create_augroup("UserTreesitterStart", { clear = true }),
+        callback = function()
+          local ok = pcall(vim.treesitter.start)
+          if not ok then
+            return
+          end
+
+          -- Disable large file highlighting
+          local max_filesize = 100 * 1024 -- 100 KB
+          local buf = vim.api.nvim_get_current_buf()
+          local fname = vim.api.nvim_buf_get_name(buf)
+          local ok_stat, stats = pcall(vim.uv.fs_stat, fname)
+          if ok_stat and stats and stats.size > max_filesize then
+            vim.treesitter.stop()
+          end
+        end,
+      })
     end,
   },
-})
+}
