@@ -35,3 +35,22 @@ reads `~/.config/tmux/tmux.conf`) and clones the plugins into `plugins/`.
 - `rose-pine/tmux`: theme
 
 To update one, change its commit in `plugins.lock` and run `install.sh` again.
+
+## Restoring sessions
+
+tmux-resurrect replays whatever each pane was running
+(`@resurrect-processes ':all:'`), and its post-save hook,
+`tmux-resurrect-agents.py`, rewrites panes running an AI agent (claude, codex,
+grok, agy, opencode) so a restore resumes that pane's exact conversation. The
+hook also refuses saves taken during shutdown or with no panes. If one slips
+through anyway, `bin/tmux-attach` points resurrect's `last` back at the newest
+save that has panes before it starts the server.
+
+## Pane titles
+
+- `prefix T`: name the current pane (prompt prefilled with its title).
+- `prefix M-t`: show or hide titles on this window's pane borders.
+
+A program that sets its own title (claude and codex do) overwrites a name set
+by hand while `allow-rename` is on; `setw allow-rename off` in a window keeps
+manual names there.

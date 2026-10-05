@@ -6,7 +6,22 @@ set -u
 
 default_session="$(hostname -s)"
 
+# A resurrect save taken while tmux dies during shutdown can be empty, and
+# continuum would auto-restore that nothing. Before the server starts, point
+# `last` back at the newest save that actually contains panes.
+repair_resurrect_last() {
+  local dir="${XDG_DATA_HOME:-$HOME/.local/share}/tmux/resurrect" f
+  grep -q '^pane' "$dir/last" 2>/dev/null && return
+  for f in $(ls -t "$dir"/tmux_resurrect_*.txt 2>/dev/null); do
+    if grep -q '^pane' "$f"; then
+      ln -sfn "$(basename "$f")" "$dir/last"
+      return
+    fi
+  done
+}
+
 if ! tmux has-session 2>/dev/null; then
+  repair_resurrect_last
   exec tmux new-session -s "$default_session"
 fi
 

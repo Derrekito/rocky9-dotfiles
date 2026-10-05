@@ -11,8 +11,11 @@ end
 
 local session = "nvim-completion-spec-" .. vim.uv.os_getpid()
 
+-- A private tmux server with no config: the user's tmux.conf (continuum
+-- auto-restoring a saved session when a server starts, for one) must not
+-- reach into the session the keys are typed into.
 local function tmux(...)
-  return vim.system({ "tmux", ... }, { text = true }):wait()
+  return vim.system({ "tmux", "-L", "nvim-completion-spec", "-f", "/dev/null", ... }, { text = true }):wait()
 end
 
 local function sleep(ms)

@@ -95,6 +95,13 @@ if ! out=$(tmux -L smoke source-file "$HOME/.config/tmux/tmux.conf" 2>&1) || [ -
   echo "$out"
   fail "tmux.conf"
 fi
+# Pane-title keys, and the resurrect hook runs on this Python (3.9 on Rocky).
+for key in T M-t; do
+  tmux -L smoke list-keys -T prefix "$key" >/dev/null 2>&1 || fail "tmux: prefix $key not bound"
+done
+# (Parsed, not py_compile'd, so no __pycache__ lands in the repo's tmux/.)
+python3 -c 'import ast, sys; ast.parse(open(sys.argv[1]).read())' \
+  "$HOME/.config/tmux/tmux-resurrect-agents.py" || fail "tmux-resurrect-agents.py"
 # tmux-quad: four panes, each with its own prompt theme and border label.
 repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 tmux -L smoke resize-window -x 200 -y 50 2>/dev/null
