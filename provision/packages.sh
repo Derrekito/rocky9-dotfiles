@@ -22,13 +22,11 @@ dnf install -y \
   cppcheck clang-tools-extra \
   go-toolset delve \
   bash-completion hostname psmisc procps-ng findutils which \
-  libicu pandoc
+  libicu
 
 # python-unversioned-command provides `python`, which devdocs.nvim calls; bs4
 # and lxml are what its converter (:DevdocsUpdate) needs. libicu: marksman (the
 # markdown language server) is a .NET binary that aborts at startup without it.
-# pandoc (EPEL, 2.14) is what :MarkdownExport runs; PDF output additionally
-# needs provision/export-tools.sh.
 
 # Node.js 18+ for the Mason servers and tools written in JS (bashls, jsonls,
 # prettier, markdownlint). AppStream's default stream is older.
@@ -37,3 +35,8 @@ dnf module install -y nodejs:22
 
 # Nice to have; git falls back to less when delta isn't installed.
 dnf install -y git-delta || echo "note: git-delta not available, skipping"
+
+# Only nvim's :MarkdownExport uses pandoc (EPEL, 2.14), so a repo without it
+# (e.g. a company mirror with no EPEL) mustn't stop the install. PDF output
+# additionally needs provision/export-tools.sh.
+dnf install -y pandoc || echo "note: pandoc not available, skipping (:MarkdownExport won't work)"

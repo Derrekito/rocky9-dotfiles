@@ -114,7 +114,8 @@ harper-ls grammar checking on prose, `:MarkdownGraph`, `:MarkdownSlides`, and
 PDF slides; the note's frontmatter `export:` block sets defaults (see the top
 of `lua/config/export/init.lua`). What each needs on Rocky 9:
 
-- DOCX: pandoc 2.14 from EPEL, installed by `provision/packages.sh`.
+- DOCX: pandoc 2.14 from EPEL, which `provision/packages.sh` installs when the
+  repos have it (it skips it otherwise, rather than stopping).
 - PDF documents and slides: TeX Live 2020 and latexmk, from
   `sudo provision/export-tools.sh` (several hundred MB, so opt-in). Slides use
   the RosePineMoon Beamer theme's color/font/inner/outer parts from

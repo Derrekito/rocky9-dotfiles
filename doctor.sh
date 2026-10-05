@@ -108,6 +108,7 @@ check_list() { # check_list <label> <names...>
   for p in "${missing[@]}"; do
     case "$p" in
       git-delta) warn "$p: not available (optional; packages.sh skips it)" ;;
+      pandoc) warn "$p: not available (optional; packages.sh skips it, and nvim's :MarkdownExport won't work)" ;;
       *) bad "$p: not available from any enabled repo ($label)" ;;
     esac
   done
@@ -175,6 +176,6 @@ else
   echo "${red}$problems problem(s).${off} packages.sh (or export-tools.sh) stops at the first missing package."
   echo "Missing packages need another source: ask for them on the mirror, or install them outside dnf."
   has_repo '^epel|[^a-z]epel' ||
-    echo "On stock Rocky/RHEL 9, neovim, ripgrep, fzf, cppcheck, pandoc and python3-beautifulsoup4 come from EPEL; a mirror of EPEL 9 would cover them."
+    echo "On stock Rocky/RHEL 9, neovim, ripgrep, fzf, cppcheck and python3-beautifulsoup4 (and the optional pandoc) come from EPEL; a mirror of EPEL 9 would cover them."
 fi
 exit $(( problems > 0 ))
