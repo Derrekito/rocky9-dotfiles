@@ -4,12 +4,13 @@
 #   ./install-plugins.sh
 #
 # Plugins land in ~/.local/share/nvim/site/pack/plugins/{start,opt}/<name>.
-# They come from ../vendor/nvim-plugins/<name>/ (copied in by hand, like the
-# rest of vendor/; provision/fetch-vendor.sh makes them), never the network:
-# each has a <name>.commit beside it, and a plugin whose commit isn't the one
-# plugins.lock pins stops the install. Re-running is safe: a plugin is only
-# replaced when its pinned commit changes. To change a pin, edit plugins.lock,
-# re-run fetch-vendor.sh where it can download, copy vendor/ over, run this.
+# They come from ../vendor/nvim-plugins.tar.gz (copied in by hand, like the
+# rest of vendor/; provision/fetch-vendor.sh makes it), never the network. Its
+# nvim-plugins/COMMITS lists each plugin's commit, and a plugin whose commit
+# isn't the one plugins.lock pins stops the install. Re-running is safe: a
+# plugin is only replaced when its pinned commit changes, and the archive is
+# only unpacked when one does. To change a pin, edit plugins.lock, re-run
+# fetch-vendor.sh where it can download, copy vendor/ over, run this.
 #
 # Your own plugins (Derrekito/*) use a local checkout under ~/devel or
 # ~/Projects when one exists, symlinked so edits are live (what lazy.nvim's
@@ -18,7 +19,10 @@ set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 lock="$here/plugins.lock"
-vendor="$(cd "$here/.." && pwd)/vendor/nvim-plugins"
+archive="$(cd "$here/.." && pwd)/vendor/nvim-plugins.tar.gz"
+commits=""   # "<name> <commit>" lines from the archive, read on first need
+unpacked=""  # temp dir the archive is unpacked into, on first need
+trap '[ -n "$unpacked" ] && rm -rf "$unpacked"' EXIT
 pack="${XDG_DATA_HOME:-$HOME/.local/share}/nvim/site/pack/plugins"
 mkdir -p "$pack/start" "$pack/opt"
 
@@ -52,28 +56,37 @@ while read -r name repo sha kind _ <&3; do
   # A dev symlink whose checkout has since gone away.
   if [ -L "$dest" ]; then rm "$dest"; fi
 
-  src="$vendor/$name"
-  if [ ! -d "$src" ] || [ ! -f "$src.commit" ]; then
-    failed+=("$name (missing vendor/nvim-plugins/$name)")
-    continue
-  fi
-  have="$(cat "$src.commit")"
-  if [ "$have" != "$sha" ]; then
-    failed+=("$name (vendor/nvim-plugins has ${have:0:10}, plugins.lock pins ${sha:0:10})")
-    continue
-  fi
   # Installed copies record their commit; replace only when it changes. (An
   # older install's git clone has no record, so it's replaced once.)
-  if [ "$(cat "$dest/.vendor-commit" 2>/dev/null)" != "$sha" ]; then
-    rm -rf "$dest.new"
-    cp -a "$src" "$dest.new"
-    echo "$sha" >"$dest.new/.vendor-commit"
-    rm -rf "$dest"
-    mv "$dest.new" "$dest"
-    printf '  inst %-28s %s\n' "$name" "${sha:0:10}"
-  else
+  if [ "$(cat "$dest/.vendor-commit" 2>/dev/null)" = "$sha" ]; then
     printf '  ok   %-28s %s\n' "$name" "${sha:0:10}"
+    continue
   fi
+  if [ ! -f "$archive" ]; then
+    failed+=("$name (missing vendor/nvim-plugins.tar.gz)")
+    continue
+  fi
+  if [ -z "$commits" ]; then
+    commits="$(tar -xzOf "$archive" nvim-plugins/COMMITS 2>/dev/null)" || true
+  fi
+  have="$(awk -v n="$name" '$1 == n { print $2 }' <<<"$commits")"
+  if [ -z "$have" ]; then
+    failed+=("$name (not in vendor/nvim-plugins.tar.gz)")
+    continue
+  elif [ "$have" != "$sha" ]; then
+    failed+=("$name (vendor/nvim-plugins.tar.gz has ${have:0:10}, plugins.lock pins ${sha:0:10})")
+    continue
+  fi
+  if [ -z "$unpacked" ]; then
+    unpacked="$(mktemp -d)"
+    tar -xzf "$archive" -C "$unpacked"
+  fi
+  rm -rf "$dest.new"
+  cp -a "$unpacked/nvim-plugins/$name" "$dest.new"
+  echo "$sha" >"$dest.new/.vendor-commit"
+  rm -rf "$dest"
+  mv "$dest.new" "$dest"
+  printf '  inst %-28s %s\n' "$name" "${sha:0:10}"
 done 3<"$lock"
 
 # telescope-fzf-native is a small C library.

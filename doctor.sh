@@ -141,23 +141,28 @@ while read -r name version file sha _; do
     bad "vendor/$file doesn't match its sha256 in vendor/MANIFEST (not $name $version?)"
   fi
 done < <(grep -v '^[[:space:]]*\(#\|$\)' "$repo/vendor/MANIFEST")
-# Neovim plugins: vendor/nvim-plugins/<name> at the commit nvim/plugins.lock pins.
-missing=() stale=()
-while read -r name _repo sha _; do
-  case "$name" in '' | '#'*) continue ;; esac
-  if [ ! -d "$repo/vendor/nvim-plugins/$name" ]; then
-    missing+=("$name")
-  elif [ "$(cat "$repo/vendor/nvim-plugins/$name.commit" 2>/dev/null)" != "$sha" ]; then
-    stale+=("$name")
-  fi
-done <"$repo/nvim/plugins.lock"
+# Neovim plugins: vendor/nvim-plugins.tar.gz, each at the commit
+# nvim/plugins.lock pins (its nvim-plugins/COMMITS lists them).
+plugins="$repo/vendor/nvim-plugins.tar.gz"
 total=$(grep -c -v '^[[:space:]]*\(#\|$\)' "$repo/nvim/plugins.lock")
-if [ ${#missing[@]} -eq 0 ] && [ ${#stale[@]} -eq 0 ]; then
-  ok "vendor/nvim-plugins: all $total plugins at their pinned commits"
+if [ ! -f "$plugins" ]; then
+  bad "vendor/nvim-plugins.tar.gz missing ($total plugins): rsync it in, or run provision/fetch-vendor.sh elsewhere"
 else
-  [ ${#missing[@]} -gt 0 ] && bad "vendor/nvim-plugins missing ${#missing[@]} of $total: ${missing[*]}"
-  [ ${#stale[@]} -gt 0 ] && bad "vendor/nvim-plugins not at the pinned commit: ${stale[*]} (re-run provision/fetch-vendor.sh)"
-  note "(your own plugins with a checkout in ~/devel or ~/Projects don't need one)"
+  commits="$(tar -xzOf "$plugins" nvim-plugins/COMMITS 2>/dev/null)"
+  missing=() stale=()
+  while read -r name _repo sha _; do
+    case "$name" in '' | '#'*) continue ;; esac
+    have="$(awk -v n="$name" '$1 == n { print $2 }' <<<"$commits")"
+    if [ -z "$have" ]; then missing+=("$name")
+    elif [ "$have" != "$sha" ]; then stale+=("$name"); fi
+  done <"$repo/nvim/plugins.lock"
+  if [ ${#missing[@]} -eq 0 ] && [ ${#stale[@]} -eq 0 ]; then
+    ok "vendor/nvim-plugins.tar.gz: all $total plugins at their pinned commits"
+  else
+    [ ${#missing[@]} -gt 0 ] && bad "vendor/nvim-plugins.tar.gz lacks ${#missing[@]} of $total: ${missing[*]}"
+    [ ${#stale[@]} -gt 0 ] && bad "vendor/nvim-plugins.tar.gz not at the pinned commit: ${stale[*]} (re-run provision/fetch-vendor.sh)"
+    note "(your own plugins with a checkout in ~/devel or ~/Projects don't need one)"
+  fi
 fi
 glibc=$(ldd --version 2>/dev/null | head -1 | grep -o -E '[0-9]+\.[0-9]+$')
 if [ -n "$glibc" ] && version_ge "$glibc" 2.34; then

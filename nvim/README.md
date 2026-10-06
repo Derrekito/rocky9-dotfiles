@@ -11,7 +11,7 @@ for Rocky Linux 9 without a plugin manager:
   `~/.local/share/rocky9-dotfiles/`, with `nvim` linked into `~/.local/bin`. No
   root needed.
 - **Plugins** are pinned to a commit each in `plugins.lock` and installed by
-  `install-plugins.sh` as plain Neovim packages, from `../vendor/nvim-plugins/`
+  `install-plugins.sh` as plain Neovim packages, from `../vendor/nvim-plugins.tar.gz`
   (copied in by hand; it never clones). There's no lazy.nvim.
 - **The plugin specs** in `lua/plugins/` are Derrekito/nvim's lazy.nvim-format
   files, unchanged apart from the few differences below, so updates copy
@@ -100,6 +100,8 @@ broken one reports an error and the rest still load.
 - **diagnostic-picker:** setup is kept quiet (`diagnostic-picker.lua`).
   Otherwise its "filter applied" notice would print on every launch, since
   plugins load at startup here instead of on `<leader>dg`.
+- **No 99** (ThePrimeagen's AI plugin): not in `plugins.lock`, no spec, no
+  `<leader>9*` keys.
 - **Plugin loading:** `init.lua` runs `config.plugins` where Derrekito/nvim
   bootstraps lazy.nvim. There's no `lazy-lock.json`; `plugins.lock` replaces it.
 

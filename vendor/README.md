@@ -5,9 +5,9 @@ README are tracked; everything else is copied in by hand.
 
 - **Release files** listed in `MANIFEST`: Neovim, the tree-sitter CLI and hunk,
   as x86_64 builds.
-- **`nvim-plugins/<name>/`**: every Neovim plugin in `nvim/plugins.lock`, as
-  plain files at the pinned commit (submodules included, no git history). Each
-  has a `nvim-plugins/<name>.commit` naming that commit.
+- **`nvim-plugins.tar.gz`**: every Neovim plugin in `nvim/plugins.lock`, at
+  the pinned commit (submodules included, no git history), in one file. Inside,
+  `nvim-plugins/COMMITS` lists each plugin's commit, and
   `nvim/install-plugins.sh` refuses a plugin whose commit isn't the one
   `plugins.lock` pins. Your own plugins (Derrekito/*) use a local checkout
   under `~/devel` or `~/Projects` instead, when there is one.
@@ -24,8 +24,9 @@ Or download them on a machine with internet access, then copy them over:
 provision/fetch-vendor.sh   # MANIFEST files (sha256-checked) + every plugin at its pin
 ```
 
-It keeps the plugins' git clones in `~/.cache/rocky9-dotfiles/plugin-src`, so
-re-running after a pin changes only fetches that plugin.
+It keeps the plugins' git clones and unpacked copies under
+`~/.cache/rocky9-dotfiles`, so re-running after a pin changes only fetches that
+plugin, then rewrites the archive.
 
 `install.sh` stops with an error that names the file if one is missing or its
 sha256 doesn't match `MANIFEST`, for example a newer release under the same

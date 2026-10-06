@@ -24,7 +24,7 @@ two commands and no GitHub login.
 [hunk](https://github.com/modem-dev/hunk). It doesn't download them. They come
 from `vendor/`, which git doesn't track: you copy the files in, and
 `install.sh` checks each against the SHA256 in `vendor/MANIFEST`. Neovim's
-plugins come from there too, as `vendor/nvim-plugins/`, each checked against
+plugins come from there too, as one archive, `vendor/nvim-plugins.tar.gz`, each checked against
 the commit `nvim/plugins.lock` pins ([details](vendor/README.md)).
 
 ## Install

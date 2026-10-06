@@ -420,16 +420,6 @@ M.sections = {
     },
   },
   {
-    category = "99 (AI, Normal/Visual Mode)",
-    items = {
-      "v: <leader>9v         → Visual prompt (selection)",
-      "n: <leader>9x         → Stop all requests",
-      "n: <leader>9s         → Search",
-      "n: <leader>9m         → Select model",
-      "n: <leader>9p         → Select provider",
-    },
-  },
-  {
     category = "Mason",
     items = {
       "n: <leader>ms         → Open Mason UI (:Mason)",

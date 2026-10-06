@@ -1,7 +1,6 @@
 # Pinned plugins for Neovim 0.12 (same set and commits as Derrekito/nvim).
 # Installed by install-plugins.sh; lua/config/plugins.lua runs their setup.
 # name  repo  commit  start|opt  # why this pin
-99                         ThePrimeagen/99                            c17422457027c913c76c75a921fca1e623d2678e  start  # master branch, same commit as Derrekito/nvim's lazy-lock
 aerial.nvim                stevearc/aerial.nvim                       28fe6e822ae344544c379d60fcb13c9519a1f08a  start  # master branch, same commit as Derrekito/nvim's lazy-lock
 bullets.vim                bullets-vim/bullets.vim                    81570b98ca44b4100b3ddcf8d9ca74b9a9b0c884  start  # master branch, same commit as Derrekito/nvim's lazy-lock
 cloak.nvim                 laytan/cloak.nvim                          648aca6d33ec011dc3166e7af3b38820d01a71e4  start  # main branch, same commit as Derrekito/nvim's lazy-lock

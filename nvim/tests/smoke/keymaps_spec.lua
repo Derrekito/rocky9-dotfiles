@@ -27,7 +27,6 @@ describe("keymaps (full config)", function()
       { "n", "<leader>zz" }, { "n", "<leader>cs" }, { "n", "<leader>gs" }, { "n", "<leader>dg" },
       { "n", "<leader>db" }, { "n", "<leader>dc" }, { "n", "<leader>dO" }, { "n", "<leader>di" },
       { "n", "<leader>do" }, { "n", "<leader>dt" }, { "n", "<leader>dr" }, -- dap
-      { "n", "<leader>9x" }, { "n", "<leader>9s" }, { "x", "<leader>9v" },
       { "n", "<leader>pv" }, { "n", "<leader>f" }, { "n", "<leader>ta" },
     }
     local missing = {}
