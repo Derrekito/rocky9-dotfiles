@@ -27,6 +27,8 @@ jobs:
       - name: Base tools
         run: dnf install -y git sudo
       - uses: actions/checkout@v4
+      - name: Release files for vendor/ (install.sh doesn't download them)
+        run: provision/fetch-vendor.sh
       - name: Create a user
         run: |
           useradd -m dev

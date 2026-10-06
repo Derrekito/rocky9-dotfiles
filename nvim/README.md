@@ -6,7 +6,8 @@ on the same Neovim release with the same plugins at the same commits, set up
 for Rocky Linux 9 without a plugin manager:
 
 - **Neovim** is the official release build (0.12.5), not EPEL's 0.8.
-  `install.sh` downloads it, checks its SHA256, and unpacks it under
+  `install.sh` takes it from `../vendor/` (copied in by hand; it never
+  downloads), checks its SHA256, and unpacks it under
   `~/.local/share/rocky9-dotfiles/`, with `nvim` linked into `~/.local/bin`. No
   root needed.
 - **Plugins** are pinned to a commit each in `plugins.lock` and installed by
@@ -17,7 +18,7 @@ for Rocky Linux 9 without a plugin manager:
 
 ## Requirements
 
-`provision/packages.sh` (dnf) and `install.sh` (pinned downloads) install all of
+`provision/packages.sh` (dnf) and `install.sh` (from `../vendor/`) install all of
 it. By hand on Rocky Linux 9:
 
 ```bash
@@ -36,8 +37,8 @@ sudo dnf module install -y nodejs:22
 - **go-toolset** lets Mason build gopls and goimports; `delve` is the Go
   debugger.
 - **The tree-sitter CLI**, which tree-sitter-manager.nvim builds parsers with,
-  is another pinned download from `install.sh`. It's pinned to 0.25.10, the
-  newest release whose binary runs on Rocky 9's glibc 2.34.
+  is another `vendor/` file installed by `install.sh`. It's pinned to 0.25.10,
+  the newest release whose binary runs on Rocky 9's glibc 2.34.
 
 Language servers install themselves on first launch (Mason): `clangd`,
 `rust_analyzer`, `gopls`, `bashls`, `lua_ls`, `marksman`, `pylsp`, `jsonls`,

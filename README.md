@@ -19,9 +19,12 @@ two commands and no GitHub login.
 | `bin/` | `tmux-attach`, `tmux-quad` | on `PATH` via `bashrc` |
 | `texmf/` | RosePineMoon Beamer theme parts, for nvim's `:MarkdownExport slides` | `~/texmf/tex/latex/beamer/RosePineMoon/` (one symlink per file) |
 
-`install.sh` also installs three release binaries into `~/.local/bin`, each
-pinned and checked against its SHA256: Neovim 0.12.5, the tree-sitter CLI
-(0.25.10, which builds Neovim's parsers), and [hunk](https://github.com/modem-dev/hunk).
+`install.sh` also installs three release binaries into `~/.local/bin`: Neovim
+0.12.5, the tree-sitter CLI (0.25.10, which builds Neovim's parsers), and
+[hunk](https://github.com/modem-dev/hunk). It doesn't download them. They come
+from `vendor/`, which git doesn't track: you copy the files in, and
+`install.sh` checks each against the SHA256 in `vendor/MANIFEST`
+([details](vendor/README.md)).
 
 ## Install
 
@@ -31,6 +34,18 @@ On the VM:
 sudo dnf install -y git
 git clone https://github.com/Derrekito/rocky9-dotfiles ~/rocky9-dotfiles
 sudo ~/rocky9-dotfiles/provision/packages.sh   # dnf: EPEL, tmux, toolchain, node 22
+```
+
+Copy the release files into `vendor/`. From a machine that has them (or after
+running `provision/fetch-vendor.sh` there to download them):
+
+```bash
+rsync -av ~/rocky9-dotfiles/vendor/ vm:rocky9-dotfiles/vendor/
+```
+
+Then, on the VM:
+
+```bash
 ~/rocky9-dotfiles/install.sh                   # links, Neovim, plugins, parsers
 ```
 
@@ -63,7 +78,10 @@ halfway.
 `provision/bootstrap.sh <user>` does the whole thing in one call, as root:
 installs git, clones this repo into `~<user>/rocky9-dotfiles` as that user,
 runs `packages.sh`, then runs `install.sh` as the user. Re-running it updates
-everything. From a `provision.sh`:
+everything. When `DOTFILES_REPO` is a local checkout (Vagrant's synced folder),
+its `vendor/` files are copied into the clone. Cloning from GitHub brings no
+`vendor/` files, so copy them in before `install.sh` runs. From a
+`provision.sh`:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Derrekito/rocky9-dotfiles/main/provision/bootstrap.sh | bash -s -- vagrant

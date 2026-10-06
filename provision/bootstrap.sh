@@ -5,7 +5,10 @@
 #   bootstrap.sh [user]        default user: $SUDO_USER, else vagrant
 #
 # 1. installs git
-# 2. clones (or updates) this repo into ~user/rocky9-dotfiles, as that user
+# 2. clones (or updates) this repo into ~user/rocky9-dotfiles, as that user;
+#    when DOTFILES_REPO is a local checkout, its vendor/ files come along
+#    (install.sh installs Neovim and friends from vendor/, which git doesn't
+#    track; see vendor/README.md)
 # 3. installs system packages (provision/packages.sh)
 # 4. runs install.sh as that user
 #
@@ -35,6 +38,12 @@ if [ -d "$dir/.git" ]; then
   as_user git -C "$dir" pull --ff-only
 else
   as_user git clone ${DOTFILES_REF:+--branch "$DOTFILES_REF"} "$repo" "$dir"
+fi
+
+# vendor/ isn't tracked, so a clone doesn't have it. From a local checkout
+# (Vagrant's synced folder, CI), copy its release files across.
+if [ -d "$repo/vendor" ]; then
+  as_user cp "$repo"/vendor/*.gz "$dir/vendor/" 2>/dev/null || true
 fi
 
 echo "==> packages"

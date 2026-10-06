@@ -3,3 +3,8 @@
 .vagrant/
 *.bak
 *.bak.*
+
+# Release files for install.sh (vendor/MANIFEST lists them); copied in, not tracked.
+/vendor/*
+!/vendor/MANIFEST
+!/vendor/README.md
