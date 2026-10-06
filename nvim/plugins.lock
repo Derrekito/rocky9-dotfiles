@@ -18,14 +18,12 @@ fugitive                   tpope/vim-fugitive                         3b753cf8c6
 harpoon                    ThePrimeagen/harpoon                       87b1a3506211538f460786c23f98ec63ad9af4e5  start  # harpoon2 branch, same commit as Derrekito/nvim's lazy-lock
 img-clip.nvim              HakonHarnes/img-clip.nvim                  99848daf801789dbebe2192b475eb887d375002c  start  # main branch, same commit as Derrekito/nvim's lazy-lock
 lazydev.nvim               folke/lazydev.nvim                         ff2cbcba459b637ec3fd165a2be59b7bbaeedf0d  start  # main branch, same commit as Derrekito/nvim's lazy-lock
-leetcode.nvim              kawre/leetcode.nvim                        4e8b3683940a8377379ce9398e7f329e3560b42c  start  # master branch, same commit as Derrekito/nvim's lazy-lock
 LuaSnip                    L3MON4D3/LuaSnip                           0abc8f390b278c3b4aabc4c004ac8a088b65cf24  start  # master branch, same commit as Derrekito/nvim's lazy-lock
 mason-lspconfig.nvim       williamboman/mason-lspconfig.nvim          b3298993d55fa194279b5eb9dbfb3a43da65cadf  start  # main branch, same commit as Derrekito/nvim's lazy-lock
 mason.nvim                 williamboman/mason.nvim                    2a6940af80375532e5e9e7c1f2fc6319a1b7a69d  start  # main branch, same commit as Derrekito/nvim's lazy-lock
 neotest                    nvim-neotest/neotest                       27bf921498043f7ecd821d6db68d05de244bbd02  start  # master branch, same commit as Derrekito/nvim's lazy-lock
 neotest-python             nvim-neotest/neotest-python                1b56ca4ba51c6014f986d6548ee629bdc95589d1  start  # master branch, same commit as Derrekito/nvim's lazy-lock
 neovim                     rose-pine/neovim                           ff483051a47e27d84bdef47703538df1ed9f4a47  start  # main branch, same commit as Derrekito/nvim's lazy-lock
-nui.nvim                   MunifTanjim/nui.nvim                       10fc361835c856ba4233ef5ea135b919bf3dce97  start  # main branch, same commit as Derrekito/nvim's lazy-lock
 nvim-autopairs             windwp/nvim-autopairs                      430522f95fe4fb7c511ec64f8c1a90cc6a66c05c  start  # master branch, same commit as Derrekito/nvim's lazy-lock
 nvim-cmp                   hrsh7th/nvim-cmp                           2ffe79f1f021def8dd1fcd81deb16f1bb0d989f3  start  # main branch, same commit as Derrekito/nvim's lazy-lock
 nvim-dap                   mfussenegger/nvim-dap                      cfa2d58f4537aca6ca83e2de1a0d9f1491121264  start  # master branch, same commit as Derrekito/nvim's lazy-lock

@@ -11,6 +11,7 @@
 #    commit (with git submodules, without history), one archive per lock:
 #    vendor/nvim-plugins.tar.gz and vendor/tmux-plugins.tar.gz. Each holds
 #    <set>/<name>/ per plugin plus <set>/COMMITS listing "<name> <commit>".
+#    Symlinks are replaced by copies, so the archives unpack anywhere.
 #    Git clones and unpacked copies are kept under ~/.cache/rocky9-dotfiles,
 #    so later runs only fetch what changed.
 set -euo pipefail
@@ -85,6 +86,23 @@ vendor_plugins() {
     changed=1
     printf '  got  %-28s %s\n' "$name" "${sha:0:10}"
   done 3<"$lock"
+
+  # Symlinks become copies of what they point at, so the archive unpacks on
+  # filesystems without symlinks (a VM's shared folder: "cannot create
+  # symbolic link ... protocol error"). The ones plugins ship are test
+  # fixtures and docs. A dangling one is dropped.
+  # Repeated until none are left: copying a directory can bring symlinks
+  # inside it along.
+  local link target
+  while [ -n "$(find "$tree" -type l -print -quit)" ]; do
+    while IFS= read -r -d '' link; do
+      target="$(readlink -f "$link")"
+      rm "$link"
+      [ -e "$target" ] && cp -r "$target" "$link"
+      changed=1
+      echo "  copied symlink ${link#"$tree"/}"
+    done < <(find "$tree" -type l -print0)
+  done
 
   for dir in "$tree"/*/; do
     [ -d "$dir" ] || continue

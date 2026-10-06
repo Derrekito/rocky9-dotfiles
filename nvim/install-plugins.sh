@@ -82,7 +82,7 @@ while read -r name repo sha kind _ <&3; do
     tar -xzf "$archive" -C "$unpacked"
   fi
   rm -rf "$dest.new"
-  cp -a "$unpacked/nvim-plugins/$name" "$dest.new"
+  cp -r "$unpacked/nvim-plugins/$name" "$dest.new" # -r, not -a: shared folders refuse ownership
   echo "$sha" >"$dest.new/.vendor-commit"
   rm -rf "$dest"
   mv "$dest.new" "$dest"

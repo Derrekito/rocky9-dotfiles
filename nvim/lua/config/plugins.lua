@@ -163,6 +163,20 @@ function M.setup()
   local by_id, order = collect()
   local list = sorted(by_id, order)
 
+  -- A spec whose plugin isn't installed (install.sh didn't finish, or
+  -- plugins.lock lacks it) is skipped with one clear message, instead of the
+  -- "module not found" each of its requires would raise.
+  local missing = {}
+  list = vim.tbl_filter(function(e)
+    if e.spec.dir or plugin_dir(e.spec) then return true end
+    table.insert(missing, spec_name(e.spec) or e.id)
+    return false
+  end, list)
+  if #missing > 0 then
+    errorf("Not installed, so not set up: %s\nRun ~/rocky9-dotfiles/install.sh (or nvim/install-plugins.sh).",
+      table.concat(missing, ", "))
+  end
+
   for _, e in ipairs(list) do
     if type(e.spec.init) == "function" then
       local ok, err = pcall(e.spec.init, { name = spec_name(e.spec), dir = plugin_dir(e.spec) })

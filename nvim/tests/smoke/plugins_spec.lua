@@ -10,7 +10,7 @@ describe("commands", function()
   local commands = {
     "LspRestart", "Cheatsheet", "FormatToggle", "FormatStatus", "ConformInfo",
     "TypeAnim", "TypeAnimToggle", "Trouble", "ZenMode", "AerialToggle", "NvimTreeToggle",
-    "Telescope", "Git", "Mason", "Leet", "Devdocs", "VimBeGood",
+    "Telescope", "Git", "Mason", "Devdocs", "VimBeGood",
   }
   if pcall(require, "lazy") then table.insert(commands, "Lazy") end
   local have = vim.api.nvim_get_commands({})

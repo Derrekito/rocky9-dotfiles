@@ -176,7 +176,7 @@ while read -r name repo_slug sha _ <&3; do
     tar -xzf "$archive" -C "$unpacked"
   fi
   rm -rf "$dest.new"
-  cp -a "$unpacked/tmux-plugins/$name" "$dest.new"
+  cp -r "$unpacked/tmux-plugins/$name" "$dest.new" # -r, not -a: shared folders refuse ownership
   echo "$sha" >"$dest.new/.vendor-commit"
   rm -rf "$dest"
   mv "$dest.new" "$dest"

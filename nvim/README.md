@@ -100,8 +100,9 @@ broken one reports an error and the rest still load.
 - **diagnostic-picker:** setup is kept quiet (`diagnostic-picker.lua`).
   Otherwise its "filter applied" notice would print on every launch, since
   plugins load at startup here instead of on `<leader>dg`.
-- **No 99** (ThePrimeagen's AI plugin): not in `plugins.lock`, no spec, no
-  `<leader>9*` keys.
+- **No 99** (ThePrimeagen's AI plugin) and **no leetcode.nvim** (with nui.nvim,
+  which only it used): not in `plugins.lock`, no specs, no `<leader>9*` keys or
+  `:Leet`.
 - **Plugin loading:** `init.lua` runs `config.plugins` where Derrekito/nvim
   bootstraps lazy.nvim. There's no `lazy-lock.json`; `plugins.lock` replaces it.
 
