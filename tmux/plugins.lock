@@ -1,4 +1,5 @@
-# tmux plugins, cloned at these commits into plugins/ by ../install.sh.
+# tmux plugins at these commits, installed into plugins/ by ../install.sh
+# from ../vendor/tmux-plugins.tar.gz (made by ../provision/fetch-vendor.sh).
 # No TPM: tmux.conf loads each one with run-shell, in order.
 # name                  repo                             commit
 tmux-sensible           tmux-plugins/tmux-sensible       25cb91f42d020f675bb0a2ce3fbd3a5d96119efa

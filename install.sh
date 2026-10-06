@@ -144,24 +144,45 @@ if command -v delta >/dev/null; then
 fi
 
 say "tmux plugins"
+# From vendor/tmux-plugins.tar.gz (see vendor/README.md), never the network.
+# Its tmux-plugins/COMMITS lists each plugin's commit; one that isn't the
+# commit tmux/plugins.lock pins stops the install. An installed plugin is only
+# replaced when its pin changes, and the archive only unpacked then.
 plugins="$repo/tmux/plugins"
+archive="$repo/vendor/tmux-plugins.tar.gz"
 mkdir -p "$plugins"
 failed=()
+commits=""
+unpacked=""
 while read -r name repo_slug sha _ <&3; do
   case "$name" in '' | '#'*) continue ;; esac
   dest="$plugins/$name"
-  if [ ! -d "$dest/.git" ]; then
-    git clone --quiet --filter=blob:none "https://github.com/$repo_slug.git" "$dest" </dev/null ||
-      { failed+=("$name (clone)"); continue; }
-  fi
-  git -C "$dest" cat-file -e "$sha^{commit}" 2>/dev/null ||
-    git -C "$dest" fetch --quiet origin </dev/null || true
-  if git -C "$dest" -c advice.detachedHead=false checkout --quiet "$sha" </dev/null; then
+  if [ "$(cat "$dest/.vendor-commit" 2>/dev/null)" = "$sha" ]; then
     printf '  ok   %-28s %s\n' "$name" "${sha:0:10}"
-  else
-    failed+=("$name (checkout $sha)")
+    continue
   fi
+  if [ ! -f "$archive" ]; then
+    failed+=("$name (missing vendor/tmux-plugins.tar.gz)")
+    continue
+  fi
+  [ -n "$commits" ] || commits="$(tar -xzOf "$archive" tmux-plugins/COMMITS 2>/dev/null)" || true
+  have="$(awk -v n="$name" '$1 == n { print $2 }' <<<"$commits")"
+  if [ "$have" != "$sha" ]; then
+    failed+=("$name (vendor/tmux-plugins.tar.gz has ${have:-nothing}, tmux/plugins.lock pins ${sha:0:10})")
+    continue
+  fi
+  if [ -z "$unpacked" ]; then
+    unpacked="$(mktemp -d)"
+    tar -xzf "$archive" -C "$unpacked"
+  fi
+  rm -rf "$dest.new"
+  cp -a "$unpacked/tmux-plugins/$name" "$dest.new"
+  echo "$sha" >"$dest.new/.vendor-commit"
+  rm -rf "$dest"
+  mv "$dest.new" "$dest"
+  printf '  inst %-28s %s\n' "$name" "${sha:0:10}"
 done 3<"$repo/tmux/plugins.lock"
+[ -n "$unpacked" ] && rm -rf "$unpacked"
 if [ ${#failed[@]} -gt 0 ]; then
   printf 'FAILED: %s\n' "${failed[@]}" >&2
   exit 1

@@ -23,9 +23,10 @@ two commands and no GitHub login.
 0.12.5, the tree-sitter CLI (0.25.10, which builds Neovim's parsers), and
 [hunk](https://github.com/modem-dev/hunk). It doesn't download them. They come
 from `vendor/`, which git doesn't track: you copy the files in, and
-`install.sh` checks each against the SHA256 in `vendor/MANIFEST`. Neovim's
-plugins come from there too, as one archive, `vendor/nvim-plugins.tar.gz`, each checked against
-the commit `nvim/plugins.lock` pins ([details](vendor/README.md)).
+`install.sh` checks each against the SHA256 in `vendor/MANIFEST`. Neovim's and
+tmux's plugins come from there too, one archive each
+(`vendor/nvim-plugins.tar.gz`, `vendor/tmux-plugins.tar.gz`), each plugin
+checked against the commit its `plugins.lock` pins ([details](vendor/README.md)).
 
 ## Install
 
@@ -37,8 +38,8 @@ git clone https://github.com/Derrekito/rocky9-dotfiles ~/rocky9-dotfiles
 sudo ~/rocky9-dotfiles/provision/packages.sh   # dnf: EPEL, tmux, toolchain, node 22
 ```
 
-Copy `vendor/` (the release files and Neovim plugins) over from a machine that
-has it, or run `provision/fetch-vendor.sh` there first to download it:
+Copy `vendor/` (the release files and the plugin archives) over from a machine
+that has it, or run `provision/fetch-vendor.sh` there first to download it:
 
 ```bash
 rsync -av ~/rocky9-dotfiles/vendor/ vm:rocky9-dotfiles/vendor/

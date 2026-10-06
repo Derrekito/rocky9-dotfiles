@@ -17,7 +17,8 @@ reads `~/.config/tmux/tmux.conf`) and clones the plugins into `plugins/`.
 
 ## Differences from the tmux 3.3+ version
 
-- No TPM. Plugins are cloned at pinned commits and loaded with `run-shell` at
+- No TPM. Plugins are installed at pinned commits from
+  `vendor/tmux-plugins.tar.gz` (never cloned) and loaded with `run-shell` at
   the end of section 6. Order matters: resurrect before continuum, and
   rose-pine after the `@rose_pine_*` options.
 - `allow-passthrough` and `pane-border-indicators` are 3.3+ options, set with
@@ -34,7 +35,9 @@ reads `~/.config/tmux/tmux.conf`) and clones the plugins into `plugins/`.
 - `christoomey/vim-tmux-navigator`
 - `rose-pine/tmux`: theme
 
-To update one, change its commit in `plugins.lock` and run `install.sh` again.
+To update one, change its commit in `plugins.lock`, run
+`provision/fetch-vendor.sh` where it can download, copy `vendor/` over, and run
+`install.sh` again.
 
 ## Restoring sessions
 

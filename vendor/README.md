@@ -11,6 +11,9 @@ README are tracked; everything else is copied in by hand.
   `nvim/install-plugins.sh` refuses a plugin whose commit isn't the one
   `plugins.lock` pins. Your own plugins (Derrekito/*) use a local checkout
   under `~/devel` or `~/Projects` instead, when there is one.
+- **`tmux-plugins.tar.gz`**: the same for `tmux/plugins.lock` (tmux-resurrect,
+  continuum, the rose-pine theme, and so on), with `tmux-plugins/COMMITS`
+  inside. `install.sh` installs them into `tmux/plugins/`.
 
 Fill it from a machine that already has them:
 
@@ -21,7 +24,7 @@ rsync -av vendor/ vm:rocky9-dotfiles/vendor/
 Or download them on a machine with internet access, then copy them over:
 
 ```bash
-provision/fetch-vendor.sh   # MANIFEST files (sha256-checked) + every plugin at its pin
+provision/fetch-vendor.sh   # MANIFEST files (sha256-checked) + nvim and tmux plugins at their pins
 ```
 
 It keeps the plugins' git clones and unpacked copies under

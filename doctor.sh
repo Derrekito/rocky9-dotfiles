@@ -124,7 +124,7 @@ tv=$(installed_ver tmux); tv=${tv:-${avail_ver[tmux]:-}}
 [ -n "$tv" ] && [ "$tv" != "3.2a" ] && warn "tmux $tv: tmux.conf targets 3.2a; check tmux/README.md if options error"
 
 # ---------------------------------------------------------------------------
-section "vendor/ (Neovim, tree-sitter, hunk, nvim plugins: install.sh never downloads them)"
+section "vendor/ (Neovim, tree-sitter, hunk, nvim and tmux plugins: install.sh never downloads them)"
 # x86_64 release builds, copied in by hand; see vendor/README.md.
 if [ "$(uname -m)" = x86_64 ]; then
   ok "x86_64, matching the builds vendor/ holds"
@@ -141,29 +141,32 @@ while read -r name version file sha _; do
     bad "vendor/$file doesn't match its sha256 in vendor/MANIFEST (not $name $version?)"
   fi
 done < <(grep -v '^[[:space:]]*\(#\|$\)' "$repo/vendor/MANIFEST")
-# Neovim plugins: vendor/nvim-plugins.tar.gz, each at the commit
-# nvim/plugins.lock pins (its nvim-plugins/COMMITS lists them).
-plugins="$repo/vendor/nvim-plugins.tar.gz"
-total=$(grep -c -v '^[[:space:]]*\(#\|$\)' "$repo/nvim/plugins.lock")
-if [ ! -f "$plugins" ]; then
-  bad "vendor/nvim-plugins.tar.gz missing ($total plugins): rsync it in, or run provision/fetch-vendor.sh elsewhere"
-else
-  commits="$(tar -xzOf "$plugins" nvim-plugins/COMMITS 2>/dev/null)"
-  missing=() stale=()
-  while read -r name _repo sha _; do
+# Plugin archives: vendor/<set>.tar.gz, each plugin at the commit its lock
+# pins (<set>/COMMITS inside lists them).
+check_plugins() { # check_plugins LOCK SET
+  local lock="$1" set="$2" archive="$repo/vendor/$2.tar.gz" commits name sha have total
+  local missing=() stale=()
+  total=$(grep -c -v '^[[:space:]]*\(#\|$\)' "$lock")
+  if [ ! -f "$archive" ]; then
+    bad "vendor/$set.tar.gz missing ($total plugins): rsync it in, or run provision/fetch-vendor.sh elsewhere"
+    return
+  fi
+  commits="$(tar -xzOf "$archive" "$set/COMMITS" 2>/dev/null)"
+  while read -r name _ sha _; do
     case "$name" in '' | '#'*) continue ;; esac
     have="$(awk -v n="$name" '$1 == n { print $2 }' <<<"$commits")"
     if [ -z "$have" ]; then missing+=("$name")
     elif [ "$have" != "$sha" ]; then stale+=("$name"); fi
-  done <"$repo/nvim/plugins.lock"
+  done <"$lock"
   if [ ${#missing[@]} -eq 0 ] && [ ${#stale[@]} -eq 0 ]; then
-    ok "vendor/nvim-plugins.tar.gz: all $total plugins at their pinned commits"
+    ok "vendor/$set.tar.gz: all $total plugins at their pinned commits"
   else
-    [ ${#missing[@]} -gt 0 ] && bad "vendor/nvim-plugins.tar.gz lacks ${#missing[@]} of $total: ${missing[*]}"
-    [ ${#stale[@]} -gt 0 ] && bad "vendor/nvim-plugins.tar.gz not at the pinned commit: ${stale[*]} (re-run provision/fetch-vendor.sh)"
-    note "(your own plugins with a checkout in ~/devel or ~/Projects don't need one)"
+    [ ${#missing[@]} -gt 0 ] && bad "vendor/$set.tar.gz lacks ${#missing[@]} of $total: ${missing[*]}"
+    [ ${#stale[@]} -gt 0 ] && bad "vendor/$set.tar.gz not at the pinned commit: ${stale[*]} (re-run provision/fetch-vendor.sh)"
   fi
-fi
+}
+check_plugins "$repo/nvim/plugins.lock" nvim-plugins
+check_plugins "$repo/tmux/plugins.lock" tmux-plugins
 glibc=$(ldd --version 2>/dev/null | head -1 | grep -o -E '[0-9]+\.[0-9]+$')
 if [ -n "$glibc" ] && version_ge "$glibc" 2.34; then
   ok "glibc $glibc: the pinned tree-sitter 0.25.10 runs on 2.34+ (0.26+ would need 2.35)"
