@@ -11,7 +11,8 @@ for Rocky Linux 9 without a plugin manager:
   `~/.local/share/rocky9-dotfiles/`, with `nvim` linked into `~/.local/bin`. No
   root needed.
 - **Plugins** are pinned to a commit each in `plugins.lock` and installed by
-  `install-plugins.sh` as plain Neovim packages. There's no lazy.nvim.
+  `install-plugins.sh` as plain Neovim packages, from `../vendor/nvim-plugins/`
+  (copied in by hand; it never clones). There's no lazy.nvim.
 - **The plugin specs** in `lua/plugins/` are Derrekito/nvim's lazy.nvim-format
   files, unchanged apart from the few differences below, so updates copy
   across. `lua/config/plugins.lua` runs them (see "How plugins load").
@@ -54,13 +55,15 @@ parsers. To redo just the plugins: `./install-plugins.sh`.
 Updating from an older checkout (the Neovim 0.8 config) is the same command.
 `install-plugins.sh` moves plugins that `plugins.lock` no longer lists out of
 Neovim's package path, to `~/.local/share/nvim/plugins-unlisted/`, so they stop
-loading. It also points a plugin's checkout at a new repo when the lock changes
-it, as it did for obsidian.nvim's move to its community fork. EPEL's `neovim`
-can stay installed: `~/.local/bin/nvim` comes first on `PATH`.
+loading. The old git-cloned plugins are replaced by the vendored copies, once.
+EPEL's `neovim` can stay installed: `~/.local/bin/nvim` comes first on `PATH`.
 
 ## Updating plugins
 
-Change a commit in `plugins.lock` and run `install-plugins.sh` again.
+Change a commit in `plugins.lock`, run `provision/fetch-vendor.sh` on a machine
+that can download (it fetches only what changed), copy `vendor/` over, and run
+`install-plugins.sh` again. A plugin whose vendored commit doesn't match the
+lock stops the install with its name.
 
 To pick up changes from Derrekito/nvim:
 
@@ -71,7 +74,7 @@ To pick up changes from Derrekito/nvim:
 
 Your own plugins (Derrekito/*) use a local checkout under `~/devel` or
 `~/Projects` when one exists, symlinked so edits are live, as lazy.nvim's dev
-block does there.
+block does there; otherwise they come from `vendor/` like the rest.
 
 ## How plugins load
 

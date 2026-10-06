@@ -4,21 +4,26 @@
 #   ./install-plugins.sh
 #
 # Plugins land in ~/.local/share/nvim/site/pack/plugins/{start,opt}/<name>.
-# Re-running is safe: existing clones are just moved to the pinned commit, so
-# to change a pin, edit plugins.lock and run this again.
+# They come from ../vendor/nvim-plugins/<name>/ (copied in by hand, like the
+# rest of vendor/; provision/fetch-vendor.sh makes them), never the network:
+# each has a <name>.commit beside it, and a plugin whose commit isn't the one
+# plugins.lock pins stops the install. Re-running is safe: a plugin is only
+# replaced when its pinned commit changes. To change a pin, edit plugins.lock,
+# re-run fetch-vendor.sh where it can download, copy vendor/ over, run this.
 #
 # Your own plugins (Derrekito/*) use a local checkout under ~/devel or
 # ~/Projects when one exists, symlinked so edits are live (what lazy.nvim's
-# dev block did). Otherwise they're cloned at their pin like everything else.
+# dev block did). Otherwise they come from vendor/ like everything else.
 set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 lock="$here/plugins.lock"
+vendor="$(cd "$here/.." && pwd)/vendor/nvim-plugins"
 pack="${XDG_DATA_HOME:-$HOME/.local/share}/nvim/site/pack/plugins"
 mkdir -p "$pack/start" "$pack/opt"
 
-for tool in git make gcc; do
-  command -v "$tool" >/dev/null || echo "warning: '$tool' not found (sudo dnf install git make gcc gcc-c++)" >&2
+for tool in make gcc; do
+  command -v "$tool" >/dev/null || echo "warning: '$tool' not found (sudo dnf install make gcc gcc-c++)" >&2
 done
 
 failed=()
@@ -47,30 +52,27 @@ while read -r name repo sha kind _ <&3; do
   # A dev symlink whose checkout has since gone away.
   if [ -L "$dest" ]; then rm "$dest"; fi
 
-  url="https://github.com/$repo.git"
-  if [ ! -d "$dest/.git" ]; then
-    if ! git clone --quiet --filter=blob:none "$url" "$dest" </dev/null; then
-      failed+=("$name (clone)")
-      continue
-    fi
-  elif [ "$(git -C "$dest" remote get-url origin 2>/dev/null)" != "$url" ]; then
-    # plugins.lock moved this plugin to another repo (a fork, a rename): the
-    # old origin can't serve the new pin.
-    git -C "$dest" remote set-url origin "$url"
-    echo "  repo $name -> $repo"
+  src="$vendor/$name"
+  if [ ! -d "$src" ] || [ ! -f "$src.commit" ]; then
+    failed+=("$name (missing vendor/nvim-plugins/$name)")
+    continue
   fi
-  if ! git -C "$dest" cat-file -e "$sha^{commit}" 2>/dev/null; then
-    git -C "$dest" fetch --quiet --tags origin </dev/null || true
-    git -C "$dest" cat-file -e "$sha^{commit}" 2>/dev/null ||
-      git -C "$dest" fetch --quiet origin "$sha" </dev/null || true
+  have="$(cat "$src.commit")"
+  if [ "$have" != "$sha" ]; then
+    failed+=("$name (vendor/nvim-plugins has ${have:0:10}, plugins.lock pins ${sha:0:10})")
+    continue
   fi
-  if git -C "$dest" -c advice.detachedHead=false checkout --quiet "$sha" </dev/null &&
-    # Submodules at the commits the pin records (devdocs.nvim's C++ manual).
-    { [ ! -f "$dest/.gitmodules" ] ||
-      git -C "$dest" submodule update --init --recursive --quiet </dev/null; }; then
-    printf '  ok   %-28s %s\n' "$name" "${sha:0:10}"
+  # Installed copies record their commit; replace only when it changes. (An
+  # older install's git clone has no record, so it's replaced once.)
+  if [ "$(cat "$dest/.vendor-commit" 2>/dev/null)" != "$sha" ]; then
+    rm -rf "$dest.new"
+    cp -a "$src" "$dest.new"
+    echo "$sha" >"$dest.new/.vendor-commit"
+    rm -rf "$dest"
+    mv "$dest.new" "$dest"
+    printf '  inst %-28s %s\n' "$name" "${sha:0:10}"
   else
-    failed+=("$name (checkout $sha)")
+    printf '  ok   %-28s %s\n' "$name" "${sha:0:10}"
   fi
 done 3<"$lock"
 

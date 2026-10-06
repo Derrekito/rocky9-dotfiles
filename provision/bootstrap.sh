@@ -40,10 +40,11 @@ else
   as_user git clone ${DOTFILES_REF:+--branch "$DOTFILES_REF"} "$repo" "$dir"
 fi
 
-# vendor/ isn't tracked, so a clone doesn't have it. From a local checkout
-# (Vagrant's synced folder, CI), copy its release files across.
+# vendor/'s contents aren't tracked, so a clone doesn't have them. From a
+# local checkout (Vagrant's synced folder, CI), copy them across: the release
+# files and vendor/nvim-plugins/.
 if [ -d "$repo/vendor" ]; then
-  as_user cp "$repo"/vendor/*.gz "$dir/vendor/" 2>/dev/null || true
+  as_user cp -a "$repo/vendor/." "$dir/vendor/"
 fi
 
 echo "==> packages"
